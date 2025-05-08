@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "Math": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["tests/fixtures/math_server.js"]
+    },
+    "Weather": {
+      "type": "sse",
+      "url": "http://localhost:3000/mcp",
+      "headers": {
+        "Authorization": "Bearer test-token"
+      }
+    }
+  }
+}
