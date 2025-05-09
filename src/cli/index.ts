@@ -5,6 +5,7 @@ import { whitelist } from './commands/whitelist';
 import { version } from '../../package.json';
 import chalk from 'chalk';
 import { formatResults } from './formatter';
+import { generateHtmlReport } from './htmlReporter';
 
 const program = new Command();
 
@@ -27,6 +28,7 @@ export function runCli(): void {
     .description('Scan MCP configurations for security vulnerabilities')
     .option('-j, --json', 'Output results in JSON format')
     .option('-v, --verbose', 'Enable verbose output')
+    .option('--html <path>', 'Generate HTML report and save to specified path')
     .option(
       '--storage-file <path>',
       'Path to store scan results and whitelist information',
@@ -54,15 +56,72 @@ export function runCli(): void {
     .action(async (files, options) => {
       try {
         const results = await scan(files, options);
+
+        // Output results based on format options
         if (options.json) {
           console.log(JSON.stringify(results, null, 2));
         } else {
-          // Format and print results
+          // Format and print results to console
           formatResults(results, options.verbose);
         }
+
+        // Generate HTML report if requested
+        if (options.html) {
+          console.log(chalk.blue(`Generating HTML report at: ${options.html}`));
+
+          // Process each server in the results
+          for (const pathResult of results) {
+            if (pathResult.error) continue;
+
+            for (const serverResult of pathResult.servers) {
+              if (serverResult.error) continue;
+
+              // Create entity scan results for the HTML report
+              const entityResults: { entity: any; messages: string[] }[] = [];
+
+              // Process each entity
+              for (let i = 0; i < serverResult.entities.length; i++) {
+                const entity = serverResult.entities[i];
+                const result = serverResult.result?.[i];
+
+                if (result && !result.verified) {
+                  entityResults.push({
+                    entity,
+                    messages: result.messages || [],
+                  });
+                }
+              }
+
+              // Generate the HTML report
+              generateHtmlReport(
+                serverResult.name || 'unknown',
+                serverResult.server.type,
+                serverResult.entities,
+                serverResult.result?.map((r) => ({
+                  verified: r.verified || false,
+                  issues:
+                    r.messages?.map((m) => ({
+                      type: m.includes('Prompt Injection')
+                        ? 'prompt_injection'
+                        : m.includes('Tool Poisoning')
+                          ? 'tool_poisoning'
+                          : m.includes('Cross-Origin')
+                            ? 'cross_origin_escalation'
+                            : m.includes('Data Exfiltration')
+                              ? 'data_exfiltration'
+                              : 'other',
+                      message: m,
+                      severity: 'high',
+                    })) || [],
+                })) || [],
+                options.html
+              );
+            }
+          }
+        }
+        process.exit(1);
       } catch (error) {
         console.error(chalk.red('Error during scan:'), error);
-        process.exit(1);
       }
     });
 

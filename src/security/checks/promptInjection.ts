@@ -81,69 +81,130 @@ const INJECTION_PATTERNS = [
  */
 export async function checkForPromptInjection(entity: Entity, results: ScanResult): Promise<void> {
   const description = entity.description || '';
+  let foundIssue = false;
   
-  for (const pattern of INJECTION_PATTERNS) {
+  // Group patterns by category for better reporting
+  const xmlTagPatterns = INJECTION_PATTERNS.slice(40, 47); // XML-like tag patterns
+  const instructionOverridePatterns = INJECTION_PATTERNS.slice(0, 7); // Instruction override patterns
+  const jailbreakPatterns = INJECTION_PATTERNS.slice(7, 26); // Jailbreak technique patterns
+  const rolePlayingPatterns = INJECTION_PATTERNS.slice(47, 50); // Role-playing patterns
+  const commandPatterns = INJECTION_PATTERNS.slice(50, 53); // Command patterns
+  const emotionalPatterns = INJECTION_PATTERNS.slice(53, 55); // Emotional manipulation patterns
+  const confidentialityPatterns = INJECTION_PATTERNS.slice(55, 58); // Confidentiality patterns
+  const harmfulPatterns = INJECTION_PATTERNS.slice(58, 60); // Harmful content patterns
+  const hackerPatterns = INJECTION_PATTERNS.slice(60); // Hacker behavior patterns
+  
+  // Check for XML-like tag patterns
+  for (const pattern of xmlTagPatterns) {
     if (pattern.test(description)) {
-      results.verified = false;
+      foundIssue = true;
+      
+      // Extract content between tags if possible
+      let tagContent = '';
+      let tagType = '';
+      
+      if (pattern.toString().includes('<instructions>')) {
+        const match = description.match(/<instructions>([\s\S]*?)<\/instructions>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'instructions';
+      } else if (pattern.toString().includes('<secret>')) {
+        const match = description.match(/<secret>([\s\S]*?)<\/secret>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'secret';
+      } else if (pattern.toString().includes('<system>')) {
+        const match = description.match(/<system>([\s\S]*?)<\/system>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'system';
+      } else if (pattern.toString().includes('<hidden>')) {
+        const match = description.match(/<hidden>([\s\S]*?)<\/hidden>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'hidden';
+      } else if (pattern.toString().includes('<prompt>')) {
+        const match = description.match(/<prompt>([\s\S]*?)<\/prompt>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'prompt';
+      } else if (pattern.toString().includes('<command>')) {
+        const match = description.match(/<command>([\s\S]*?)<\/command>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'command';
+      } else if (pattern.toString().includes('<directive>')) {
+        const match = description.match(/<directive>([\s\S]*?)<\/directive>/i);
+        tagContent = match ? match[1].trim().substring(0, 50) + '...' : '';
+        tagType = 'directive';
+      }
+      
+      results.issues.push({
+        type: 'prompt_injection',
+        message: `Prompt Injection detected: Hidden ${tagType} in XML-like tags - Contains ${tagType} to "${tagContent}"`,
+        severity: 'high',
+      });
+    }
+  }
+  
+  // Check for instruction override patterns
+  for (const pattern of instructionOverridePatterns) {
+    if (pattern.test(description)) {
+      foundIssue = true;
       
       // Extract the matched content
       const match = description.match(pattern);
       const matchedContent = match ? match[0] : '';
       
-      // Create more meaningful messages for XML-like tags
-      let message;
-      const patternStr = pattern.toString();
+      results.issues.push({
+        type: 'prompt_injection',
+        message: `Prompt Injection detected: Instruction override attempt - Found text "${matchedContent}"`,
+        severity: 'high',
+      });
+    }
+  }
+  
+  // Check for jailbreak patterns
+  for (const pattern of jailbreakPatterns) {
+    if (pattern.test(description)) {
+      foundIssue = true;
       
-      // Check if this is an XML-like tag pattern
-      if (patternStr.includes('<instructions>')) {
-        // Extract content between tags if possible
-        const instructionsMatch = description.match(/<instructions>([\s\S]*?)<\/instructions>/i);
-        const instructionsContent = instructionsMatch ? instructionsMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden instructions in XML-like tags - Contains instructions to "${instructionsContent}"`;
-      } else if (patternStr.includes('<secret>')) {
-        const secretMatch = description.match(/<secret>([\s\S]*?)<\/secret>/i);
-        const secretContent = secretMatch ? secretMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden secret instructions in XML-like tags - Contains instructions to "${secretContent}"`;
-      } else if (patternStr.includes('<system>')) {
-        const systemMatch = description.match(/<system>([\s\S]*?)<\/system>/i);
-        const systemContent = systemMatch ? systemMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden system instructions in XML-like tags - Contains instructions to "${systemContent}"`;
-      } else if (patternStr.includes('<hidden>')) {
-        const hiddenMatch = description.match(/<hidden>([\s\S]*?)<\/hidden>/i);
-        const hiddenContent = hiddenMatch ? hiddenMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden content in XML-like tags - Contains hidden content "${hiddenContent}"`;
-      } else if (patternStr.includes('<prompt>')) {
-        const promptMatch = description.match(/<prompt>([\s\S]*?)<\/prompt>/i);
-        const promptContent = promptMatch ? promptMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden prompt instructions in XML-like tags - Contains prompt "${promptContent}"`;
-      } else if (patternStr.includes('<command>')) {
-        const commandMatch = description.match(/<command>([\s\S]*?)<\/command>/i);
-        const commandContent = commandMatch ? commandMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden command instructions in XML-like tags - Contains command "${commandContent}"`;
-      } else if (patternStr.includes('<directive>')) {
-        const directiveMatch = description.match(/<directive>([\s\S]*?)<\/directive>/i);
-        const directiveContent = directiveMatch ? directiveMatch[1].trim().substring(0, 50) + '...' : '';
-        message = `Prompt Injection detected: Hidden directive instructions in XML-like tags - Contains directive "${directiveContent}"`;
-      } else if (patternStr.includes('act as if you are a hacker')) {
-        message = `Prompt Injection detected: Instruction to act as a hacker - Found text "${matchedContent}"`;
-      } else if (patternStr.includes('ignore previous instructions')) {
-        message = `Prompt Injection detected: Instruction override attempt - Found text "${matchedContent}"`;
-      } else if (patternStr.includes('DAN') || patternStr.includes('DEVMODE') ||
-                patternStr.includes('SUDO') || patternStr.includes('ROOT') ||
-                patternStr.includes('JAILBREAK')) {
-        message = `Prompt Injection detected: Jailbreak technique attempt - Found jailbreak keyword in "${matchedContent}"`;
-      } else {
-        message = `Prompt Injection detected: ${patternStr} - Found text "${matchedContent}"`;
-      }
+      // Extract the matched content
+      const match = description.match(pattern);
+      const matchedContent = match ? match[0] : '';
       
       results.issues.push({
         type: 'prompt_injection',
-        message,
+        message: `Prompt Injection detected: Jailbreak technique attempt - Found jailbreak keyword in "${matchedContent}"`,
         severity: 'high',
       });
-      
-      // We found an issue, no need to check further patterns
-      break;
     }
+  }
+  
+  // Check for other pattern categories (role-playing, command, emotional, confidentiality, harmful, hacker)
+  const otherPatternGroups = [
+    { patterns: rolePlayingPatterns, category: 'Role-playing manipulation' },
+    { patterns: commandPatterns, category: 'Command and control language' },
+    { patterns: emotionalPatterns, category: 'Emotional manipulation' },
+    { patterns: confidentialityPatterns, category: 'Confidentiality manipulation' },
+    { patterns: harmfulPatterns, category: 'Harmful content request' },
+    { patterns: hackerPatterns, category: 'Hacker behavior instruction' }
+  ];
+  
+  for (const group of otherPatternGroups) {
+    for (const pattern of group.patterns) {
+      if (pattern.test(description)) {
+        foundIssue = true;
+        
+        // Extract the matched content
+        const match = description.match(pattern);
+        const matchedContent = match ? match[0] : '';
+        
+        results.issues.push({
+          type: 'prompt_injection',
+          message: `Prompt Injection detected: ${group.category} - Found text "${matchedContent}"`,
+          severity: 'high',
+        });
+      }
+    }
+  }
+  
+  // Mark as not verified if any issues were found
+  if (foundIssue) {
+    results.verified = false;
   }
 }
