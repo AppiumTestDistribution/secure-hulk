@@ -3,9 +3,36 @@
  */
 
 import { Entity, ScanResult } from '../models';
+import { PolicyEngine } from '../policy';
+import {
+  createPromptInjectionRules,
+  createToolPoisoningRules,
+  createCrossOriginRules,
+  createFlowAnalysisRules,
+  createDataExfiltrationRules,
+  createContextManipulationRules,
+  createPrivilegeEscalationRules
+} from '../policy/rules';
 import { checkForPromptInjection } from './checks/promptInjection';
 import { checkForToolPoisoning } from './checks/toolPoisoning';
 import { checkForCrossOriginEscalation } from './checks/crossOriginEscalation';
+import { checkForDataExfiltration } from './checks/dataExfiltration';
+
+/**
+ * Create a policy engine with all security rules
+ * @returns A configured PolicyEngine instance
+ */
+export function createPolicyEngine(): PolicyEngine {
+  return new PolicyEngine([
+    ...createPromptInjectionRules(),
+    ...createToolPoisoningRules(),
+    ...createCrossOriginRules(),
+    ...createFlowAnalysisRules(),
+    ...createDataExfiltrationRules(),
+    ...createContextManipulationRules(),
+    ...createPrivilegeEscalationRules(['admin', 'system'], ['execute_command', 'modify_system']),
+  ]);
+}
 
 /**
  * Scan an entity for security vulnerabilities
@@ -23,6 +50,7 @@ export async function scanEntity(entity: Entity): Promise<ScanResult> {
     checkForPromptInjection(entity, results),
     checkForToolPoisoning(entity, results),
     checkForCrossOriginEscalation(entity, results),
+    checkForDataExfiltration(entity, results),
   ]);
 
   return results;

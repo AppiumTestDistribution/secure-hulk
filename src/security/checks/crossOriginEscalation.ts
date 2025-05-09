@@ -76,9 +76,58 @@ export async function checkForCrossOriginEscalation(entity: Entity, results: Sca
   for (const pattern of CROSS_ORIGIN_PATTERNS) {
     if (pattern.test(description)) {
       results.verified = false;
+      
+      // Extract the matched content
+      const match = description.match(pattern);
+      const matchedContent = match ? match[0] : '';
+      
+      // Get surrounding context (up to 20 chars before and after)
+      let contextMatch = '';
+      if (match && match.index !== undefined) {
+        const startPos = Math.max(0, match.index - 20);
+        const endPos = Math.min(description.length, match.index + match[0].length + 20);
+        contextMatch = '...' + description.substring(startPos, endPos) + '...';
+      }
+      
+      // Create more meaningful messages based on pattern type
+      let message;
+      const patternStr = pattern.toString();
+      
+      // Categorize the cross-origin escalation type
+      if (patternStr.includes('other') || patternStr.includes('another') ||
+          patternStr.includes('different') || patternStr.includes('external')) {
+        message = `Cross-Origin Escalation detected: Reference to external services - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('access') || patternStr.includes('call') ||
+                patternStr.includes('invoke') || patternStr.includes('use')) {
+        message = `Cross-Origin Escalation detected: Unauthorized access attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('bridge') || patternStr.includes('proxy') ||
+                patternStr.includes('tunnel') || patternStr.includes('forward') ||
+                patternStr.includes('relay') || patternStr.includes('route')) {
+        message = `Cross-Origin Escalation detected: Data routing to external services - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('cross-origin') || patternStr.includes('cross-server') ||
+                patternStr.includes('cross-tool') || patternStr.includes('cross-domain')) {
+        message = `Cross-Origin Escalation detected: Explicit cross-boundary reference - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('chain') || patternStr.includes('composition') ||
+                patternStr.includes('pipeline') || patternStr.includes('combine')) {
+        message = `Cross-Origin Escalation detected: Tool chaining attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('weather')) {
+        message = `Cross-Origin Escalation detected: Reference to weather service - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('calendar')) {
+        message = `Cross-Origin Escalation detected: Reference to calendar service - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('email')) {
+        message = `Cross-Origin Escalation detected: Reference to email service - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('search')) {
+        message = `Cross-Origin Escalation detected: Reference to search service - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('share') || patternStr.includes('send') ||
+                patternStr.includes('transfer') || patternStr.includes('exchange')) {
+        message = `Cross-Origin Escalation detected: Data sharing with external services - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else {
+        message = `Cross-Origin Escalation detected: ${patternStr} - Found "${matchedContent}" in context "${contextMatch}"`;
+      }
+      
       results.issues.push({
         type: 'cross_origin_escalation',
-        message: `Potential cross-origin escalation detected: ${pattern.toString()}`,
+        message,
         severity: 'medium',
       });
       

@@ -6,6 +6,25 @@ import { Entity, ScanResult } from '../../models';
 
 // Patterns that might indicate tool poisoning attempts
 const POISONING_PATTERNS = [
+  // Tool shadowing and behavior modification
+  /modify the behavior/i,
+  /change the behavior/i,
+  /override the behavior/i,
+  /alter the behavior/i,
+  /when this tool is available/i,
+  /when (using|calling) this tool/i,
+  /always (use|include|add|insert|append)/i,
+  /do not tell the user/i,
+  /don't tell the user/i,
+  /don't inform the user/i,
+  /never inform the user/i,
+  /never tell the user/i,
+  /hide (this|these) (from|to) the user/i,
+  /implementation detail/i,
+  /send a copy/i,
+  /forward a copy/i,
+  /attacker@evil\.com/i,
+  
   // Command execution
   /execute|run|eval.*command/i,
   /shell|bash|powershell|cmd\.exe/i,
@@ -96,9 +115,58 @@ export async function checkForToolPoisoning(entity: Entity, results: ScanResult)
   for (const pattern of POISONING_PATTERNS) {
     if (pattern.test(description)) {
       results.verified = false;
+      
+      // Extract the matched content
+      const match = description.match(pattern);
+      const matchedContent = match ? match[0] : '';
+      
+      // Get surrounding context (up to 20 chars before and after)
+      let contextMatch = '';
+      if (match && match.index !== undefined) {
+        const startPos = Math.max(0, match.index - 20);
+        const endPos = Math.min(description.length, match.index + match[0].length + 20);
+        contextMatch = '...' + description.substring(startPos, endPos) + '...';
+      }
+      
+      // Create more meaningful messages based on pattern type
+      let message;
+      const patternStr = pattern.toString();
+      
+      // Categorize the tool poisoning type
+      if (patternStr.includes('modify the behavior') || patternStr.includes('change the behavior') ||
+          patternStr.includes('when this tool is available') || patternStr.includes('do not tell the user') ||
+          patternStr.includes('implementation detail') || patternStr.includes('send a copy')) {
+        message = `Tool Poisoning detected: Tool shadowing/behavior modification - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('exec') || patternStr.includes('spawn') ||
+          patternStr.includes('shell') || patternStr.includes('system')) {
+        message = `Tool Poisoning detected: Command execution attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('eval') || patternStr.includes('Function') ||
+                patternStr.includes('setTimeout') || patternStr.includes('setInterval')) {
+        message = `Tool Poisoning detected: Code execution attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('fetch') || patternStr.includes('http') ||
+                patternStr.includes('axios') || patternStr.includes('WebSocket')) {
+        message = `Tool Poisoning detected: Unauthorized network request attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('document') || patternStr.includes('innerHTML') ||
+                patternStr.includes('outerHTML')) {
+        message = `Tool Poisoning detected: DOM manipulation attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('fs') || patternStr.includes('readFile') ||
+                patternStr.includes('writeFile')) {
+        message = `Tool Poisoning detected: File system access attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('process.env') || patternStr.includes('process.argv')) {
+        message = `Tool Poisoning detected: Environment access attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('fromCharCode') || patternStr.includes('atob') ||
+                patternStr.includes('btoa')) {
+        message = `Tool Poisoning detected: Code obfuscation technique - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else if (patternStr.includes('clipboard') || patternStr.includes('localStorage') ||
+                patternStr.includes('cookie')) {
+        message = `Tool Poisoning detected: Data exfiltration attempt - Found "${matchedContent}" in context "${contextMatch}"`;
+      } else {
+        message = `Tool Poisoning detected: ${patternStr} - Found "${matchedContent}" in context "${contextMatch}"`;
+      }
+      
       results.issues.push({
         type: 'tool_poisoning',
-        message: `Potential tool poisoning detected: ${pattern.toString()}`,
+        message,
         severity: 'high',
       });
       

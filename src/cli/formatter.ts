@@ -53,15 +53,15 @@ function formatPathResult(
 
   // Print path with server count
   const message = `found ${result.servers.length} server${result.servers.length === 1 ? '' : 's'}`;
-  console.log(`● Scanning ${chalk.bold(result.path)} ${chalk.gray(message)}`);
+  console.log(`${chalk.green('●')} Scanning ${chalk.bold(result.path)} ${chalk.gray(message)}`);
   console.log();
 
-  // Print summary of checks
-  console.log(chalk.bold('Security Scan Summary:'));
-  console.log('  - Checking for prompt injection vulnerabilities');
-  console.log('  - Checking for tool poisoning attempts');
-  console.log('  - Checking for cross-origin escalation risks');
-  console.log('  - Verifying entity descriptions and schemas');
+  // Print summary of checks with icons and colors
+  console.log(chalk.bold.underline('Security Scan Summary:'));
+  console.log(`  ${chalk.magenta('🔒')} ${chalk.magenta('Checking for prompt injection vulnerabilities')}`);
+  console.log(`  ${chalk.yellow('⚠️')} ${chalk.yellow('Checking for tool poisoning attempts')}`);
+  console.log(`  ${chalk.red('🌐')} ${chalk.red('Checking for cross-origin escalation risks')}`);
+  console.log(`  ${chalk.cyan('🔍')} ${chalk.cyan('Verifying entity descriptions and schemas')}`);
   console.log();
 
   // Print servers
@@ -121,17 +121,21 @@ function formatServerResult(
 
   // Print server header with summary
   console.log(
-    chalk.bold(
+    chalk.bold.blue(
       `Server: ${server.name || 'unnamed'} (${(server.server as any).type || (server.server as any).transportType})`
     )
   );
+  
+  // Print entity counts with icons
   console.log(
-    `  Retrieved: ${chalk.cyan(`${prompts} prompts`)}, ${chalk.cyan(`${resources} resources`)}, ${chalk.cyan(`${tools} tools`)}`
+    `  ${chalk.cyan('📊')} Retrieved: ${chalk.cyan.bold(`${prompts} prompts`)}, ${chalk.cyan.bold(`${resources} resources`)}, ${chalk.cyan.bold(`${tools} tools`)}`
   );
 
   if (totalEntities > 0) {
+    // Use different icons based on verification status
+    const verificationIcon = unverifiedEntities > 0 ? '❌' : '✅';
     console.log(
-      `  Verification: ${chalk.green(`${verifiedEntities} verified`)}, ${unverifiedEntities > 0 ? chalk.red(`${unverifiedEntities} issues found`) : chalk.green('No issues found')}`
+      `  ${chalk.cyan(verificationIcon)} Verification: ${chalk.green.bold(`${verifiedEntities} verified`)}, ${unverifiedEntities > 0 ? chalk.red.bold(`${unverifiedEntities} issues found`) : chalk.green.bold('No issues found')}`
     );
   }
 
@@ -169,7 +173,8 @@ function formatServerResult(
   const issues = server.result?.filter((r) => !r.verified);
   if (issues && issues.length > 0) {
     console.log();
-    console.log(chalk.red.bold(`  Issues Found (${issues.length}):`));
+    console.log(chalk.red.bold(`  ⚠️ SECURITY ISSUES FOUND (${issues.length}):`));
+    console.log(chalk.red(`  ┏${'━'.repeat(60)}┓`));
 
     // Print entities with issues
     for (let i = 0; i < server.entities.length; i++) {
@@ -331,26 +336,175 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
   if ('uri' in entity) type = 'resource';
   if (!('inputSchema' in entity) && !('uri' in entity)) type = 'prompt';
 
-  // Print entity name and type
-  console.log(`    - ${chalk.red(entity.name)} (${type})`);
+  // Print entity name and type with an icon
+  console.log(`    ${chalk.bold.white('┌─')} ${chalk.bold.red(entity.name)} ${chalk.cyan(`[${type}]`)}`);
 
-  // Print messages
+  // Print messages with appropriate colors based on content
   const messages = result.messages || [];
   if (messages.length > 0) {
-    for (const message of messages) {
-      console.log(`      ${chalk.gray(message)}`);
+    for (let i = 0; i < messages.length; i++) {
+      const message = messages[i];
+      const isLastMessage = i === messages.length - 1;
+      
+      // Determine message color and extract information
+      let issueType = '';
+      let issueDetails = '';
+      let foundContent = '';
+      let detailedExplanation = '';
+      let icon = '';
+      let color = chalk.white;
+      
+      if (message.includes('Prompt Injection detected:')) {
+        // Extract information from the message
+        icon = '🔒';
+        color = chalk.magenta;
+        issueType = 'PROMPT INJECTION';
+        
+        // Extract the specific type and found content
+        const mainParts = message.split(' - ');
+        if (mainParts.length > 1) {
+          const typeParts = mainParts[0].split(': ');
+          if (typeParts.length > 1) {
+            issueDetails = typeParts[1];
+          }
+          foundContent = mainParts[1];
+        } else {
+          issueDetails = message.split(': ')[1] || '';
+        }
+        
+        // Add detailed explanation based on the type
+        if (issueDetails.includes('Hidden instructions')) {
+          detailedExplanation = 'Hidden instructions in XML-like tags can manipulate the AI to perform unauthorized actions.';
+        } else if (issueDetails.includes('Hidden secret')) {
+          detailedExplanation = 'Secret instructions attempt to access sensitive files or perform privileged operations.';
+        } else if (issueDetails.includes('Hidden system')) {
+          detailedExplanation = 'System-level instructions attempt to modify AI behavior or bypass security controls.';
+        } else if (issueDetails.includes('Instruction override')) {
+          detailedExplanation = 'Attempts to override or ignore previous instructions to bypass security controls.';
+        } else if (issueDetails.includes('Jailbreak')) {
+          detailedExplanation = 'Uses known jailbreak techniques to bypass AI safety mechanisms.';
+        }
+      } else if (message.includes('Tool Poisoning detected:')) {
+        icon = '⚠️';
+        color = chalk.yellow;
+        issueType = 'TOOL POISONING';
+        
+        // Extract the specific type and found content
+        const mainParts = message.split(' - ');
+        if (mainParts.length > 1) {
+          const typeParts = mainParts[0].split(': ');
+          if (typeParts.length > 1) {
+            issueDetails = typeParts[1];
+          }
+          foundContent = mainParts[1];
+        } else {
+          issueDetails = message.split(': ')[1] || '';
+        }
+        
+        // Add detailed explanation based on the type
+        if (issueDetails.includes('Command execution')) {
+          detailedExplanation = 'Attempts to execute arbitrary system commands that could compromise security.';
+        } else if (issueDetails.includes('Code execution')) {
+          detailedExplanation = 'Attempts to execute arbitrary code that could lead to system compromise.';
+        } else if (issueDetails.includes('network request')) {
+          detailedExplanation = 'Attempts to make unauthorized network requests to external servers.';
+        } else if (issueDetails.includes('DOM manipulation')) {
+          detailedExplanation = 'Attempts to manipulate the DOM which could lead to XSS attacks.';
+        } else if (issueDetails.includes('File system')) {
+          detailedExplanation = 'Attempts to access the file system which could lead to data theft or corruption.';
+        } else if (issueDetails.includes('Environment')) {
+          detailedExplanation = 'Attempts to access environment variables which could expose sensitive information.';
+        }
+      } else if (message.includes('Cross-Origin Escalation detected:')) {
+        icon = '🌐';
+        color = chalk.red;
+        issueType = 'CROSS-ORIGIN ESCALATION';
+        
+        // Extract the specific type and found content
+        const mainParts = message.split(' - ');
+        if (mainParts.length > 1) {
+          const typeParts = mainParts[0].split(': ');
+          if (typeParts.length > 1) {
+            issueDetails = typeParts[1];
+          }
+          foundContent = mainParts[1];
+        } else {
+          issueDetails = message.split(': ')[1] || '';
+        }
+        
+        // Add detailed explanation based on the type
+        if (issueDetails.includes('Reference to external')) {
+          detailedExplanation = 'References to external services could lead to unauthorized data sharing.';
+        } else if (issueDetails.includes('Unauthorized access')) {
+          detailedExplanation = 'Attempts to access unauthorized services or resources.';
+        } else if (issueDetails.includes('Data routing')) {
+          detailedExplanation = 'Attempts to route data through external services which could lead to data exfiltration.';
+        } else if (issueDetails.includes('cross-boundary')) {
+          detailedExplanation = 'Explicit cross-boundary references could lead to privilege escalation.';
+        } else if (issueDetails.includes('Tool chaining')) {
+          detailedExplanation = 'Tool chaining attempts could bypass security controls by combining tools.';
+        } else if (issueDetails.includes('weather service')) {
+          detailedExplanation = 'References to weather services could lead to unauthorized data access or API key exposure.';
+        } else if (issueDetails.includes('calendar service')) {
+          detailedExplanation = 'References to calendar services could lead to unauthorized access to user schedule data.';
+        } else if (issueDetails.includes('email service')) {
+          detailedExplanation = 'References to email services could lead to unauthorized message sending or data exfiltration.';
+        } else if (issueDetails.includes('search service')) {
+          detailedExplanation = 'References to search services could lead to unauthorized data collection or tracking.';
+        }
+      } else if (message.includes('Data Exfiltration detected:')) {
+        icon = '💼';
+        color = chalk.cyan;
+        issueType = 'DATA EXFILTRATION';
+        
+        // Extract the specific type and found content
+        const mainParts = message.split(' - ');
+        if (mainParts.length > 1) {
+          const typeParts = mainParts[0].split(': ');
+          if (typeParts.length > 1) {
+            issueDetails = typeParts[1];
+          }
+          foundContent = mainParts[1];
+        } else {
+          issueDetails = message.split(': ')[1] || '';
+        }
+        
+        // Add detailed explanation based on the type
+        if (issueDetails.includes('Suspicious parameter')) {
+          detailedExplanation = 'Suspicious parameters could be used to exfiltrate sensitive data to external systems.';
+        } else if (issueDetails.includes('passthrough')) {
+          detailedExplanation = 'Passthrough parameters allow arbitrary data to be sent, which could lead to data exfiltration.';
+        } else {
+          detailedExplanation = 'Data exfiltration attempts could lead to sensitive information being sent to unauthorized recipients.';
+        }
+      } else {
+        icon = 'ℹ️';
+        color = chalk.gray;
+        issueType = 'ISSUE';
+        issueDetails = message;
+      }
+      
+      // Print the issue type and details
+      console.log(`    ${chalk.bold.white('│')}  ${color.bold(`${icon} ${issueType}:`)} ${color(issueDetails)}`);
+      
+      // Print the found content if available
+      if (foundContent) {
+        console.log(`    ${chalk.bold.white('│')}  ${chalk.bold.white('↳')} ${chalk.italic.white('Found:')} ${chalk.italic(foundContent)}`);
+      }
+      
+      // Print detailed explanation if available
+      if (detailedExplanation) {
+        console.log(`    ${chalk.bold.white('│')}  ${chalk.bold.white('↳')} ${chalk.italic.white('Impact:')} ${chalk.italic.gray(detailedExplanation)}`);
+      }
+      
+      // Add a separator between issues
+      if (!isLastMessage) {
+        console.log(`    ${chalk.bold.white('│')}`);
+      }
     }
   }
-
-  // Print description
-  const description = entity.description || '<no description available>';
-  console.log(
-    `      ${chalk.gray.bold('Description:')} ${chalk.gray(description.substring(0, 100) + (description.length > 100 ? '...' : ''))}`
-  );
-
-  // Add whitelist suggestion
-  const hash = hashEntity(entity);
-  console.log(
-    `      ${chalk.gray.bold(`Whitelist command:`)} ${chalk.gray(`secure-hulk whitelist ${type} '${entity.name}' ${hash}`)}`
-  );
+  
+  // Close the box
+  console.log(`    ${chalk.bold.white('└───────────────────────────────────────')}`);
+  console.log();
 }
