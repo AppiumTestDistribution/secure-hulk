@@ -30,7 +30,8 @@
     "eventsource": "^2.0.2",
     "fast-levenshtein": "^3.0.0",
     "levenshtein-edit-distance": "^3.0.1",
-    "natural": "^6.10.4"
+    "natural": "^6.10.4",
+    "openai": "^4.28.0"
   },
   "devDependencies": {
     "@types/eventsource": "^1.1.15",

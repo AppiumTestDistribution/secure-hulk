@@ -1,38 +1,119 @@
-# Secure Hulk
+# Secure-Hulk
 
-Security scanning tool for Model Context Protocol (MCP) servers and tools. This tool scans MCP configurations for security vulnerabilities like prompt injections, tool poisoning, and cross-origin escalations.
+Security scanner for Model Context Protocol servers and tools.
+
+## Overview
+
+Secure-Hulk is a security scanner for Model Context Protocol (MCP) servers and tools. It helps identify potential security vulnerabilities in MCP configurations, such as prompt injection, tool poisoning, cross-origin escalation, and data exfiltration.
 
 ## Features
 
-- Scanning of Claude, Cursor, Windsurf, and other file-based MCP client configurations
-- Detection of prompt injection attacks in tool descriptions
-- Detection of tool poisoning attacks
-- Detection of cross-origin escalation attacks (tool shadowing)
-- Tool Pinning to detect and prevent MCP rug pull attacks via hashing
-- Whitelisting capability for approved tools
+- Scan MCP configurations for security vulnerabilities
+- Detect prompt injection attempts
+- Identify tool poisoning vulnerabilities
+- Check for cross-origin escalation risks
+- Monitor for data exfiltration attempts
+- Generate HTML reports of scan results
+- Whitelist approved entities
 
 ## Installation
+
+```bash
+npm install
+npm run build
+```
 
 ## Usage
 
 ### Scanning MCP Configurations
 
 ```bash
-# Scan all known MCP configs
-secure-hulk-ts
+# Scan well-known MCP configuration paths
+npm start
 
-# Scan a specific config file
-secure-hulk-ts scan ~/custom/config.json
+# Scan specific configuration files
+npm start scan /path/to/config.json
+
+# Generate HTML report
+npm start scan --html report.html /path/to/config.json
+
+# Enable verbose output
+npm start scan -v /path/to/config.json
 
 # Output results in JSON format
-secure-hulk-ts --json
+npm start scan -j /path/to/config.json
 ```
 
-## Security Approach
+### Using OpenAI Moderation API for Harmful Content Detection
 
-1. **Rule-Based Pattern Matching**: Detects common patterns associated with prompt injections, tool poisoning, and cross-origin escalations
-2. **Tool Pinning**: Detects changes in tool descriptions to prevent MCP rug pull attacks
-3. **Cross-Reference Detection**: Identifies potential cross-origin escalation attacks by detecting references to other servers or tools
+Secure-Hulk now supports using OpenAI's Moderation API to detect harmful content in entity descriptions. This provides a more robust detection mechanism for identifying potentially harmful, unsafe, or unethical content.
+
+To use the OpenAI Moderation API:
+
+```bash
+npm start scan --use-openai-moderation --openai-api-key YOUR_API_KEY /path/to/config.json
+```
+
+Options:
+
+- `--use-openai-moderation`: Enable OpenAI Moderation API for prompt injection detection
+- `--openai-api-key <key>`: Your OpenAI API key
+- `--openai-moderation-model <model>`: OpenAI Moderation model to use (default: 'omni-moderation-latest')
+
+The OpenAI Moderation API provides several advantages:
+
+1. **More accurate detection**: The API uses advanced AI models to detect harmful content, which can catch subtle harmful content that pattern matching might miss.
+2. **Categorized results**: The API provides detailed categories for flagged content (hate, harassment, self-harm, sexual content, violence, etc.), helping you understand the specific type of harmful content detected.
+3. **Confidence scores**: Each category includes a confidence score, allowing you to set appropriate thresholds for your use case.
+4. **Regular updates**: The API is regularly updated to detect new types of harmful content as OpenAI's policies evolve.
+
+The API can detect content in these categories:
+- Hate speech
+- Harassment
+- Self-harm
+- Sexual content
+- Violence
+- Illegal activities
+- Deception
+
+If the OpenAI Moderation API check fails for any reason, Secure-Hulk will automatically fall back to pattern-based detection for prompt injection vulnerabilities.
+
+### Inspecting MCP Configurations
+
+```bash
+npm start inspect /path/to/config.json
+```
+
+### Managing the Whitelist
+
+```bash
+# Add an entity to the whitelist
+npm start whitelist tool "Calculator" abc123
+
+# Print the whitelist
+npm start whitelist
+
+# Reset the whitelist
+npm start whitelist --reset
+```
+
+## Configuration
+
+### Scan Options
+
+- `--json, -j`: Output results in JSON format
+- `--verbose, -v`: Enable verbose output
+- `--html <path>`: Generate HTML report and save to specified path
+- `--storage-file <path>`: Path to store scan results and whitelist information
+- `--server-timeout <seconds>`: Seconds to wait before timing out server connections
+- `--checks-per-server <number>`: Number of times to check each server
+- `--suppress-mcpserver-io <boolean>`: Suppress stdout/stderr from MCP servers
+
+### Whitelist Options
+
+- `--storage-file <path>`: Path to store scan results and whitelist information
+- `--reset`: Reset the entire whitelist
+- `--local-only`: Only update local whitelist, don't contribute to global whitelist
 
 ## License
 

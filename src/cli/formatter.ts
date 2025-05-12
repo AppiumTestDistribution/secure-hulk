@@ -61,6 +61,7 @@ function formatPathResult(
   console.log(`  ${chalk.magenta('🔒')} ${chalk.magenta('Checking for prompt injection vulnerabilities')}`);
   console.log(`  ${chalk.yellow('⚠️')} ${chalk.yellow('Checking for tool poisoning attempts')}`);
   console.log(`  ${chalk.red('🌐')} ${chalk.red('Checking for cross-origin escalation risks')}`);
+  console.log(`  ${chalk.blue('🛡️')} ${chalk.blue('Checking for harmful content using OpenAI Moderation API')}`);
   console.log(`  ${chalk.cyan('🔍')} ${chalk.cyan('Verifying entity descriptions and schemas')}`);
   console.log();
 
@@ -451,6 +452,18 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
       } else {
         detailedExplanation = 'Data exfiltration attempts could lead to sensitive information being sent to unauthorized recipients.';
       }
+    } else if (message.includes('Harmful content detected by OpenAI Moderation API:')) {
+      issueType = 'HARMFUL CONTENT';
+      icon = '🛡️';
+      color = chalk.blue;
+      
+      const parts = message.split(': ');
+      if (parts.length > 1) {
+        const categoryParts = parts[1].split(' - ');
+        issueCategory = categoryParts[0];
+      }
+      
+      detailedExplanation = 'Content flagged by OpenAI Moderation API for potentially harmful, unsafe, or unethical content.';
     } else {
       issueType = 'ISSUE';
       icon = 'ℹ️';

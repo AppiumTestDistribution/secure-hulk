@@ -11,7 +11,7 @@ import {
   EntityScanResult,
   SSEServerConfig,
   StdioServerConfig,
-  WhitelistOptions
+  WhitelistOptions,
 } from '../models';
 import { scanMcpConfigFile, checkServerWithTimeout } from '../mcp-client';
 import { verifyServer } from '../security/scanner';
@@ -22,24 +22,24 @@ import { ToolPinningManager } from './toolPinning';
 // Well-known MCP configuration paths by platform
 const WELL_KNOWN_MCP_PATHS: Record<string, string[]> = {
   linux: [
-    '~/.codeium/windsurf/mcp_config.json',  // windsurf
-    '~/.cursor/mcp.json',                   // cursor
-    '~/.vscode/mcp.json',                   // vscode
-    '~/.config/Code/User/settings.json',    // vscode linux
+    '~/.codeium/windsurf/mcp_config.json', // windsurf
+    '~/.cursor/mcp.json', // cursor
+    '~/.vscode/mcp.json', // vscode
+    '~/.config/Code/User/settings.json', // vscode linux
   ],
   darwin: [
-    '~/.codeium/windsurf/mcp_config.json',                      // windsurf
-    '~/.cursor/mcp.json',                                       // cursor
-    '~/Library/Application Support/Claude/claude_desktop_config.json',  // Claude Desktop mac
-    '~/.vscode/mcp.json',                                       // vscode
-    '~/Library/Application Support/Code/User/settings.json',    // vscode mac
+    '~/.codeium/windsurf/mcp_config.json', // windsurf
+    '~/.cursor/mcp.json', // cursor
+    '~/Library/Application Support/Claude/claude_desktop_config.json', // Claude Desktop mac
+    '~/.vscode/mcp.json', // vscode
+    '~/Library/Application Support/Code/User/settings.json', // vscode mac
   ],
   win32: [
-    '~/.codeium/windsurf/mcp_config.json',                // windsurf
-    '~/.cursor/mcp.json',                                 // cursor
+    '~/.codeium/windsurf/mcp_config.json', // windsurf
+    '~/.cursor/mcp.json', // cursor
     '~/AppData/Roaming/Claude/claude_desktop_config.json', // Claude Desktop windows
-    '~/.vscode/mcp.json',                                 // vscode
-    '~/AppData/Roaming/Code/User/settings.json',          // vscode windows
+    '~/.vscode/mcp.json', // vscode
+    '~/AppData/Roaming/Code/User/settings.json', // vscode windows
   ],
 };
 
@@ -74,32 +74,59 @@ export async function scan(
   files: string[] = [],
   options: ScanOptions = {}
 ): Promise<ScanPathResult[]> {
-  console.log('Starting MCP scan...');
-  
+  // Convert kebab-case CLI options to camelCase
+  if (
+    options.useOpenaiModeration === undefined &&
+    (options as any)['use-openai-moderation']
+  ) {
+    options.useOpenaiModeration = (options as any)['use-openai-moderation'];
+  }
+
+  if (
+    options.openaiApiKey === undefined &&
+    (options as any)['openai-api-key']
+  ) {
+    options.openaiApiKey = (options as any)['openai-api-key'];
+  }
+
+  if (
+    options.openaiModerationModel === undefined &&
+    (options as any)['openai-moderation-model']
+  ) {
+    options.openaiModerationModel = (options as any)['openai-moderation-model'];
+  }
+
   // Use provided files or well-known paths
   const pathsToScan = files.length > 0 ? files : getWellKnownPaths();
   console.log(`Found ${pathsToScan.length} configuration paths to scan`);
-  
+
   // Initialize storage manager
   console.log('Initializing storage manager...');
   const storageManager = new StorageManager(options.storageFile);
   await storageManager.initialize();
-  
+
   // Initialize tool pinning manager
   console.log('Initializing tool pinning manager...');
   const toolPinningManager = new ToolPinningManager(storageManager);
-  
+
   // Scan each path
   const results: ScanPathResult[] = [];
-  
+
   for (let i = 0; i < pathsToScan.length; i++) {
     const filePath = pathsToScan[i];
     const expandedPath = expandPath(filePath);
-    console.log(`\nScanning configuration [${i+1}/${pathsToScan.length}]: ${expandedPath}`);
-    const result = await scanPath(expandedPath, options, storageManager, toolPinningManager);
+    console.log(
+      `\nScanning configuration [${i + 1}/${pathsToScan.length}]: ${expandedPath}`
+    );
+    const result = await scanPath(
+      expandedPath,
+      options,
+      storageManager,
+      toolPinningManager
+    );
     results.push(result);
   }
-  
+
   console.log('\nScan completed successfully');
   return results;
 }
@@ -122,17 +149,17 @@ async function scanPath(
     path,
     servers: [],
   };
-  
+
   try {
     // Parse the configuration file
     console.log(`Reading and parsing configuration file: ${path}`);
     const config = await scanMcpConfigFile(path);
     const servers = config.getServers();
-    
+
     // Create server scan results
     const serverCount = Object.keys(servers).length;
     console.log(`Found ${serverCount} MCP servers in configuration`);
-    
+
     result.servers = Object.entries(servers).map(([name, server]) => ({
       name,
       server: server as SSEServerConfig | StdioServerConfig,
@@ -141,11 +168,13 @@ async function scanPath(
       tools: [],
       entities: [],
     }));
-    
+
     // Scan each server
     for (let i = 0; i < result.servers.length; i++) {
       const serverName = result.servers[i].name || `unnamed-server-${i}`;
-      console.log(`\nScanning server [${i+1}/${result.servers.length}]: ${serverName}`);
+      console.log(
+        `\nScanning server [${i + 1}/${result.servers.length}]: ${serverName}`
+      );
       result.servers[i] = await scanServer(
         result.servers[i],
         options,
@@ -154,7 +183,7 @@ async function scanPath(
         false
       );
     }
-    
+
     // Check for cross-references
     result.crossRefResult = checkCrossReferences(result.servers);
   } catch (error) {
@@ -163,7 +192,7 @@ async function scanPath(
       exception: error instanceof Error ? error : new Error(String(error)),
     };
   }
-  
+
   return result;
 }
 
@@ -185,50 +214,63 @@ async function scanServer(
 ): Promise<ServerScanResult> {
   const result = { ...serverResult };
   const serverName = result.name || 'unnamed server';
-  
+
   try {
     // Connect to the server and retrieve entities
     const serverTimeout = options.serverTimeout || 200;
     const suppressMcpserverIo = options.suppressMcpserverIo !== false;
-    
-    console.log(`Connecting to server "${serverName}" (timeout: ${serverTimeout}s)...`);
+
+    console.log(
+      `Connecting to server "${serverName}" (timeout: ${serverTimeout}s)...`
+    );
     const { prompts, resources, tools } = await checkServerWithTimeout(
       result.server,
       serverTimeout,
       suppressMcpserverIo
     );
-    
+
     result.prompts = prompts;
     result.resources = resources;
     result.tools = tools;
     result.entities = [...prompts, ...resources, ...tools];
-    
-    console.log(`Retrieved ${prompts.length} prompts, ${resources.length} resources, and ${tools.length} tools from "${serverName}"`);
-    
+
+    console.log(
+      `Retrieved ${prompts.length} prompts, ${resources.length} resources, and ${tools.length} tools from "${serverName}"`
+    );
+
     if (!inspectOnly) {
       // Verify the server's entities
-      console.log(`Verifying ${result.entities.length} entities from "${serverName}"...`);
-      const verificationResults = await verifyServer(result.name || '', result.entities);
-      
+      console.log(
+        `Verifying ${result.entities.length} entities from "${serverName}"...`
+      );
+      const verificationResults = await verifyServer(
+        result.name || '',
+        result.entities,
+        options
+      );
+
       // Create entity scan results
       result.result = result.entities.map((entity, index) => {
         const scanResult = verificationResults[index];
         const entityResult: EntityScanResult = {
           verified: scanResult.verified,
-          messages: scanResult.issues.map(issue => issue.message),
+          messages: scanResult.issues.map((issue) => issue.message),
         };
-        
+
         return entityResult;
       });
-      
-      const verifiedCount = result.result?.filter(r => r.verified).length || 0;
-      console.log(`Verified ${verifiedCount}/${result.entities.length} entities from "${serverName}"`);
-      
+
+      const verifiedCount =
+        result.result?.filter((r) => r.verified).length || 0;
+      console.log(
+        `Verified ${verifiedCount}/${result.entities.length} entities from "${serverName}"`
+      );
+
       // Check for changes and update whitelist status
       for (let i = 0; i < result.entities.length; i++) {
         const entity = result.entities[i];
         const entityResult = result.result[i];
-        
+
         // Check for changes
         if (entityResult.verified !== false) {
           const pinningResult = await toolPinningManager.checkAndUpdateEntity(
@@ -236,19 +278,19 @@ async function scanServer(
             entity,
             entityResult.verified || false
           );
-          
+
           entityResult.changed = pinningResult.changed;
           entityResult.messages.push(...pinningResult.messages);
-          
+
           // If changed, mark as not verified
           if (pinningResult.changed) {
             entityResult.verified = false;
           }
         }
-        
+
         // Check whitelist
         entityResult.whitelisted = storageManager.isWhitelisted(entity);
-        
+
         // If whitelisted and not verified, mark as verified
         if (entityResult.whitelisted && !entityResult.verified) {
           entityResult.verified = true;
@@ -261,7 +303,7 @@ async function scanServer(
       exception: error instanceof Error ? error : new Error(String(error)),
     };
   }
-  
+
   return result;
 }
 
@@ -277,23 +319,28 @@ export async function inspect(
 ): Promise<ScanPathResult[]> {
   // Use provided files or well-known paths
   const pathsToScan = files.length > 0 ? files : getWellKnownPaths();
-  
+
   // Initialize storage manager
   const storageManager = new StorageManager(options.storageFile);
   await storageManager.initialize();
-  
+
   // Initialize tool pinning manager
   const toolPinningManager = new ToolPinningManager(storageManager);
-  
+
   // Scan each path
   const results: ScanPathResult[] = [];
-  
+
   for (const filePath of pathsToScan) {
     const expandedPath = expandPath(filePath);
-    const result = await inspectPath(expandedPath, options, storageManager, toolPinningManager);
+    const result = await inspectPath(
+      expandedPath,
+      options,
+      storageManager,
+      toolPinningManager
+    );
     results.push(result);
   }
-  
+
   return results;
 }
 
@@ -315,12 +362,12 @@ async function inspectPath(
     path,
     servers: [],
   };
-  
+
   try {
     // Parse the configuration file
     const config = await scanMcpConfigFile(path);
     const servers = config.getServers();
-    
+
     // Create server scan results
     result.servers = Object.entries(servers).map(([name, server]) => ({
       name,
@@ -330,7 +377,7 @@ async function inspectPath(
       tools: [],
       entities: [],
     }));
-    
+
     // Inspect each server
     for (let i = 0; i < result.servers.length; i++) {
       result.servers[i] = await scanServer(
@@ -347,7 +394,7 @@ async function inspectPath(
       exception: error instanceof Error ? error : new Error(String(error)),
     };
   }
-  
+
   return result;
 }
 
@@ -367,7 +414,7 @@ export async function whitelist(
   // Initialize storage manager
   const storageManager = new StorageManager(options.storageFile);
   await storageManager.initialize();
-  
+
   if (options.reset) {
     // Reset the whitelist
     await storageManager.resetWhitelist();
@@ -381,6 +428,8 @@ export async function whitelist(
     console.log(`Added ${type} '${name}' to whitelist`);
     storageManager.printWhitelist();
   } else {
-    throw new Error('Please provide all three parameters: type, name, and hash');
+    throw new Error(
+      'Please provide all three parameters: type, name, and hash'
+    );
   }
 }

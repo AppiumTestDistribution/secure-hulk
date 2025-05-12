@@ -133,6 +133,11 @@ export interface ScanOptions {
   checksPerServer?: number;
   suppressMcpserverIo?: boolean;
   printErrors?: boolean;
+  
+  // OpenAI Moderation API options
+  useOpenaiModeration?: boolean;
+  openaiApiKey?: string;
+  openaiModerationModel?: string;
 }
 
 export interface WhitelistOptions {

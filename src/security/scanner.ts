@@ -2,7 +2,7 @@
  * Security scanner for MCP entities
  */
 
-import { Entity, ScanResult } from '../models';
+import { Entity, ScanResult, ScanOptions } from '../models';
 import { PolicyEngine } from '../policy';
 import {
   createPromptInjectionRules,
@@ -11,9 +11,10 @@ import {
   createFlowAnalysisRules,
   createDataExfiltrationRules,
   createContextManipulationRules,
-  createPrivilegeEscalationRules
+  createPrivilegeEscalationRules,
 } from '../policy/rules';
 import { checkForPromptInjection } from './checks/promptInjection';
+import { checkForHarmfulContent } from './checks/harmfulContent';
 import { checkForToolPoisoning } from './checks/toolPoisoning';
 import { checkForCrossOriginEscalation } from './checks/crossOriginEscalation';
 import { checkForDataExfiltration } from './checks/dataExfiltration';
@@ -30,16 +31,23 @@ export function createPolicyEngine(): PolicyEngine {
     ...createFlowAnalysisRules(),
     ...createDataExfiltrationRules(),
     ...createContextManipulationRules(),
-    ...createPrivilegeEscalationRules(['admin', 'system'], ['execute_command', 'modify_system']),
+    ...createPrivilegeEscalationRules(
+      ['admin', 'system'],
+      ['execute_command', 'modify_system']
+    ),
   ]);
 }
 
 /**
  * Scan an entity for security vulnerabilities
  * @param entity The entity to scan
+ * @param options Scan options
  * @returns The scan result
  */
-export async function scanEntity(entity: Entity): Promise<ScanResult> {
+export async function scanEntity(
+  entity: Entity,
+  options?: ScanOptions
+): Promise<ScanResult> {
   const results: ScanResult = {
     verified: true,
     issues: [],
@@ -48,6 +56,7 @@ export async function scanEntity(entity: Entity): Promise<ScanResult> {
   // Run security checks
   await Promise.all([
     checkForPromptInjection(entity, results),
+    checkForHarmfulContent(entity, results, options),
     checkForToolPoisoning(entity, results),
     checkForCrossOriginEscalation(entity, results),
     checkForDataExfiltration(entity, results),
@@ -64,9 +73,10 @@ export async function scanEntity(entity: Entity): Promise<ScanResult> {
  */
 export async function verifyServer(
   serverName: string,
-  entities: Entity[]
+  entities: Entity[],
+  options?: ScanOptions
 ): Promise<ScanResult[]> {
   // Scan each entity
-  const scanPromises = entities.map((entity) => scanEntity(entity));
+  const scanPromises = entities.map((entity) => scanEntity(entity, options));
   return Promise.all(scanPromises);
 }

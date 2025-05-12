@@ -13,7 +13,7 @@ const program = new Command();
  * Run the CLI application
  */
 export function runCli(): void {
-  console.log(chalk.blue.bold(`MCP-Scan TypeScript v${version}`));
+  console.log(chalk.blue.bold(`Secure Hulk v${version}`));
   console.log('');
 
   program
@@ -49,12 +49,27 @@ export function runCli(): void {
       'Suppress stdout/stderr from MCP servers',
       'true'
     )
+    .option(
+      '--use-openai-moderation',
+      'Use OpenAI Moderation API to detect harmful content in entity descriptions',
+      false
+    )
+    .option(
+      '--openai-api-key <key>',
+      'OpenAI API key for Moderation API (required if using OpenAI moderation)'
+    )
+    .option(
+      '--openai-moderation-model <model>',
+      'OpenAI Moderation model to use',
+      'omni-moderation-latest'
+    )
     .argument(
       '[files...]',
       'Path(s) to MCP config file(s). If not provided, well-known paths will be checked'
     )
     .action(async (files, options) => {
       try {
+        console.log('CLI options:', JSON.stringify(options, null, 2));
         const results = await scan(files, options);
 
         // Output results based on format options

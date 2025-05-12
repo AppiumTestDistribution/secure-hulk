@@ -16,12 +16,6 @@ export async function connectToServer(
   resources: Resource[];
   tools: Tool[];
 }> {
-  // Log the connection attempt
-  const serverName = config.name || 'unnamed server';
-  console.log(
-    `Attempting to connect to ${serverName} (timeout: ${timeout}s)...`
-  );
-
   // Create a new MCP client
   const client = new Client({
     name: 'secure-hulk',
@@ -64,12 +58,10 @@ export async function connectToServer(
           // Try to find the full path to npx and node
           const { execSync } = require('child_process');
           const npxPath = execSync('which npx').toString().trim();
-          console.log(`Found npx at: ${npxPath}`);
           command = npxPath;
 
           // Also find the node path and add it to the environment
           const nodePath = execSync('which node').toString().trim();
-          console.log(`Found node at: ${nodePath}`);
 
           // Add the directory containing node to the PATH
           const nodeDir = nodePath.substring(0, nodePath.lastIndexOf('/'));
@@ -80,7 +72,6 @@ export async function connectToServer(
         }
       }
 
-      console.log(`Using command: ${command} with PATH: ${env.PATH}`);
       const transport = new StdioClientTransport({
         command: command,
         args: config.args || [],
