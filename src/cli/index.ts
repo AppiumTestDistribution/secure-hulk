@@ -63,6 +63,25 @@ export function runCli(): void {
       'OpenAI Moderation model to use',
       'omni-moderation-latest'
     )
+    .option(
+      '--use-nemo-guardrails',
+      'Use NVIDIA NeMo Guardrails to detect harmful content in entity descriptions',
+      false
+    )
+    .option(
+      '--nemo-guardrails-config-path <path>',
+      'Path to NeMo Guardrails configuration directory (required if using NeMo Guardrails)'
+    )
+    .option(
+      '--nemo-guardrails-timeout <milliseconds>',
+      'Timeout for NeMo Guardrails checks in milliseconds',
+      '5000'
+    )
+    .option(
+      '--python-path <path>',
+      'Path to Python executable for NeMo Guardrails',
+      'python'
+    )
     .argument(
       '[files...]',
       'Path(s) to MCP config file(s). If not provided, well-known paths will be checked'

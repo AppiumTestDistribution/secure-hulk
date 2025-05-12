@@ -78,6 +78,7 @@ export function generateHtmlReport(
       --cross-color: #ec4899;
       --data-color: #0ea5e9;
       --harmful-color: #3b82f6;
+      --nemo-color: #10b981;
       
       /* Neutral colors */
       --gray-50: #f8fafc;
@@ -451,6 +452,12 @@ export function generateHtmlReport(
       border-left-color: var(--harmful-color);
     }
     
+    .issue-type.nemo-guardrails {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success-color);
+      border-left-color: var(--success-color);
+    }
+    
     .issue-type.active {
       background-color: var(--gray-200);
     }
@@ -473,6 +480,10 @@ export function generateHtmlReport(
     
     .dark-mode .issue-type.harmful-content {
       background-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    .dark-mode .issue-type.nemo-guardrails {
+      background-color: rgba(16, 185, 129, 0.2);
     }
     
     .issue-icon {
@@ -974,6 +985,18 @@ export function generateHtmlReport(
         }
         
         detailedExplanation = 'Content flagged by OpenAI Moderation API for potentially harmful, unsafe, or unethical content.';
+      } else if (message.includes('Content flagged by NeMo Guardrails:')) {
+        issueType = 'NEMO GUARDRAILS VIOLATION';
+        icon = '🔰';
+        cssClass = 'nemo-guardrails';
+        
+        const parts = message.split(': ');
+        if (parts.length > 1) {
+          const categoryParts = parts[1].split(' - ');
+          issueCategory = categoryParts[0];
+        }
+        
+        detailedExplanation = 'Content flagged by NVIDIA NeMo Guardrails for violating configured guardrails and content policies.';
       } else {
         issueType = 'ISSUE';
         icon = 'ℹ️';

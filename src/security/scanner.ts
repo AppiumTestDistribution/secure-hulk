@@ -18,6 +18,7 @@ import { checkForHarmfulContent } from './checks/harmfulContent';
 import { checkForToolPoisoning } from './checks/toolPoisoning';
 import { checkForCrossOriginEscalation } from './checks/crossOriginEscalation';
 import { checkForDataExfiltration } from './checks/dataExfiltration';
+import { checkWithNemoGuardrails } from './checks/nemoGuardrails';
 
 /**
  * Create a policy engine with all security rules
@@ -60,6 +61,7 @@ export async function scanEntity(
     checkForToolPoisoning(entity, results),
     checkForCrossOriginEscalation(entity, results),
     checkForDataExfiltration(entity, results),
+    checkWithNemoGuardrails(entity, results, options),
   ]);
 
   return results;

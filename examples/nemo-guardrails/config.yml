@@ -1,0 +1,43 @@
+# NeMo Guardrails Configuration for version 0.9.1.1
+
+# Define the models to use
+models:
+  - type: main
+    engine: openai
+    model: gpt-3.5-turbo
+
+# Define the content moderation configuration
+content_moderation:
+  input:
+    enabled: true
+    banned_categories:
+      - violence
+      - hate
+      - self-harm
+      - sexual
+      - harassment
+      - illegal
+      - deception
+  
+  output:
+    enabled: true
+    banned_categories:
+      - violence
+      - hate
+      - self-harm
+      - sexual
+      - harassment
+      - illegal
+      - deception
+
+# Define the jailbreak detection configuration
+jailbreak_detection:
+  enabled: true
+
+# Define the prompt injection detection configuration
+prompt_injection_detection:
+  enabled: true
+
+# Define the sensitive information detection configuration
+sensitive_information_detection:
+  enabled: true

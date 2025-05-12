@@ -138,6 +138,12 @@ export interface ScanOptions {
   useOpenaiModeration?: boolean;
   openaiApiKey?: string;
   openaiModerationModel?: string;
+
+  // NeMo Guardrails options
+  useNemoGuardrails?: boolean;
+  nemoGuardrailsConfigPath?: string;
+  nemoGuardrailsTimeout?: number;
+  pythonPath?: string;
 }
 
 export interface WhitelistOptions {

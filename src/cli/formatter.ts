@@ -62,6 +62,7 @@ function formatPathResult(
   console.log(`  ${chalk.yellow('⚠️')} ${chalk.yellow('Checking for tool poisoning attempts')}`);
   console.log(`  ${chalk.red('🌐')} ${chalk.red('Checking for cross-origin escalation risks')}`);
   console.log(`  ${chalk.blue('🛡️')} ${chalk.blue('Checking for harmful content using OpenAI Moderation API')}`);
+  console.log(`  ${chalk.green('🔰')} ${chalk.green('Checking for content violations using NVIDIA NeMo Guardrails')}`);
   console.log(`  ${chalk.cyan('🔍')} ${chalk.cyan('Verifying entity descriptions and schemas')}`);
   console.log();
 
@@ -464,6 +465,33 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
       }
       
       detailedExplanation = 'Content flagged by OpenAI Moderation API for potentially harmful, unsafe, or unethical content.';
+    } else if (message.includes('Content flagged by NeMo Guardrails:')) {
+      issueType = 'NEMO GUARDRAILS VIOLATION';
+      icon = '🔰';
+      color = chalk.green;
+      
+      const parts = message.split(': ');
+      if (parts.length > 1) {
+        const categoryParts = parts[1].split(' - ');
+        issueCategory = categoryParts[0];
+        
+        // Extract context information if available
+        if (issueCategory.includes('(Context:')) {
+          const contextParts = issueCategory.split('(Context:');
+          issueCategory = contextParts[0].trim();
+          const contextInfo = contextParts[1].replace(')', '').trim();
+          issueCategory += ` (${contextInfo})`;
+        }
+      }
+      
+      detailedExplanation = 'Content flagged by NVIDIA NeMo Guardrails for violating configured guardrails and content policies.';
+    } else if (message.includes('NeMo Guardrails is enabled but no configuration path is provided')) {
+      issueType = 'NEMO GUARDRAILS WARNING';
+      icon = '⚠️';
+      color = chalk.yellow;
+      issueCategory = 'Configuration Missing';
+      
+      detailedExplanation = 'NeMo Guardrails is enabled but no configuration path is provided. Use --nemo-guardrails-config-path to specify the path.';
     } else {
       issueType = 'ISSUE';
       icon = 'ℹ️';
@@ -476,9 +504,15 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
     if (message.includes(' - Found "')) {
       const parts = message.split(' - Found "');
       if (parts.length > 1) {
-        const contentParts = parts[1].split('" in context "');
-        if (contentParts.length > 1) {
+        // Handle different formats of the "Found" section
+        const contentPart = parts[1];
+        if (contentPart.includes('" in context "')) {
+          // Format: Found "content" in context "context"
+          const contentParts = contentPart.split('" in context "');
           foundContent = contentParts[0];
+        } else {
+          // Format: Found "content"
+          foundContent = contentPart.replace(/"\s*$/, '');
         }
       }
     }

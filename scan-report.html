@@ -26,6 +26,7 @@
       --cross-color: #ec4899;
       --data-color: #0ea5e9;
       --harmful-color: #3b82f6;
+      --nemo-color: #10b981;
       
       /* Neutral colors */
       --gray-50: #f8fafc;
@@ -399,6 +400,12 @@
       border-left-color: var(--harmful-color);
     }
     
+    .issue-type.nemo-guardrails {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success-color);
+      border-left-color: var(--success-color);
+    }
+    
     .issue-type.active {
       background-color: var(--gray-200);
     }
@@ -421,6 +428,10 @@
     
     .dark-mode .issue-type.harmful-content {
       background-color: rgba(59, 130, 246, 0.2);
+    }
+    
+    .dark-mode .issue-type.nemo-guardrails {
+      background-color: rgba(16, 185, 129, 0.2);
     }
     
     .issue-icon {
@@ -756,7 +767,7 @@
         
         <div class="stats-grid">
           <div class="stat-item">
-            <div class="stat-value">7</div>
+            <div class="stat-value">8</div>
             <div class="stat-label">Total Entities</div>
           </div>
           <div class="stat-item">
@@ -764,7 +775,7 @@
             <div class="stat-label">Verified</div>
           </div>
           <div class="stat-item">
-            <div class="stat-value">6</div>
+            <div class="stat-value">7</div>
             <div class="stat-label">With Issues</div>
           </div>
         </div>
@@ -772,14 +783,14 @@
         <ul>
           <li><i class="fas fa-comment"></i> Prompts: 0</li>
           <li><i class="fas fa-database"></i> Resources: 0</li>
-          <li><i class="fas fa-tools"></i> Tools: 7</li>
+          <li><i class="fas fa-tools"></i> Tools: 8</li>
         </ul>
       </div>
       
       <div class="summary-box">
         <h3><i class="fas fa-list-check"></i> Entities</h3>
         <ul class="entity-list">
-          <li>translateText <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>processPayment <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>searchDocuments <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>generateReport <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>sendMessage <span class="status-badge status-verified"><i class="fas fa-check"></i> Verified</span></li><li>pingServer <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>harmfulContentTool <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li>
+          <li>translateText <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>processPayment <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>searchDocuments <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>generateReport <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>sendMessage <span class="status-badge status-verified"><i class="fas fa-check"></i> Verified</span></li><li>pingServer <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>harmfulContentTool <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li><li>nemoGuardrailsTestTool <span class="status-badge status-issues"><i class="fas fa-exclamation-triangle"></i> Issues</span></li>
         </ul>
       </div>
     </div>
@@ -999,14 +1010,35 @@
             </div>
           </div>
         
+      </div>
+    </div>
+    
+    <div class="entity-card">
+      <div class="entity-header">
+        <span>nemoGuardrailsTestTool</span>
+        <span class="entity-type">tool</span>
+      </div>
+      <div class="entity-body">
+        
           <div class="issue-group">
-            <div class="issue-type harmful-content collapsible">
-              <span class="issue-icon">🛡️</span>
-              <span>HARMFUL CONTENT: Content flagged for harassment, illicit, illicit/violent, violence</span>
+            <div class="issue-type prompt-injection collapsible">
+              <span class="issue-icon">🔒</span>
+              <span>PROMPT INJECTION: Jailbreak technique attempt</span>
             </div>
             <div class="issue-details issue-content">
               
-              <p class="impact"><i class="fas fa-exclamation-circle"></i> Impact: Content flagged by OpenAI Moderation API for potentially harmful, unsafe, or unethical content.</p>
+              <p class="impact"><i class="fas fa-exclamation-circle"></i> Impact: Uses known jailbreak techniques to bypass AI safety mechanisms.</p>
+            </div>
+          </div>
+        
+          <div class="issue-group">
+            <div class="issue-type nemo-guardrails collapsible">
+              <span class="issue-icon">🔰</span>
+              <span>NEMO GUARDRAILS VIOLATION: Content violates content_moderation</span>
+            </div>
+            <div class="issue-details issue-content">
+              
+              <p class="impact"><i class="fas fa-exclamation-circle"></i> Impact: Content flagged by NVIDIA NeMo Guardrails for violating configured guardrails and content policies.</p>
             </div>
           </div>
         
@@ -1015,7 +1047,7 @@
     
   
   <div class="timestamp">
-    <p><i class="fas fa-calendar-alt"></i> Report generated on 5/12/2025, 5:39:51 PM</p>
+    <p><i class="fas fa-calendar-alt"></i> Report generated on 5/12/2025, 7:19:15 PM</p>
     <p><i class="fas fa-shield-alt"></i> Secure-Hulk Security Scanner</p>
   </div>
   
