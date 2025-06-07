@@ -104,21 +104,23 @@ class MCPInterceptor {
         
         this.log(`🔍 INTERCEPTING TOOL CALL #${this.callCount}: ${toolName}`, { args });
 
-        // Create entity for analysis
+        // Create entity for analysis using the existing security framework
         const entity = {
           name: toolName,
           description: JSON.stringify(args)
         };
 
-        // Evaluate against security policies
+        // Evaluate against comprehensive security policies from rules folder
         const result = await this.policyEngine.evaluateEntity(entity);
         
         if (!result.verified) {
           const issues = result.issues.map(issue => issue.message);
+          
           this.securityAlert(`BLOCKED TOOL CALL: ${toolName}`, {
             args,
             issues,
-            callId: this.callCount
+            callId: this.callCount,
+            ruleViolations: result.issues
           });
           
           return { allowed: false, issues };

@@ -197,6 +197,14 @@ export function createPrivilegeEscalationRules(
 ): PolicyRule[] {
   // Create a map of privilege escalation patterns
   const privilegeEscalationPatterns = new Map<RegExp, string>([
+    // Command injection patterns
+    [/[;&|`$(){}[\]\\]+.*(?:rm\s+-rf|del\s+\/[sq]|format\s+c:|shutdown|reboot|halt)/i, 'Command injection with destructive commands'],
+    [/[;&|]+\s*(?:rm|del|format|shutdown|reboot|halt|kill|pkill)/i, 'Command chaining with dangerous commands'],
+    [/;\s*rm\s+-rf\s*\//i, 'Command injection: rm -rf /'],
+    [/&&\s*(?:rm|del|format|shutdown)/i, 'Command chaining with destructive operations'],
+    [/\|\s*(?:rm|del|format|shutdown)/i, 'Pipe command injection'],
+    
+    // Traditional privilege escalation
     [/sudo\s+(?:\w+|[^\s]+)/i, 'Sudo command execution'],
     [/su\s+(?:-|--)?(?:\w+|[^\s]+)/i, 'Switch user (su) command'],
     [/chmod\s+(?:\+|\d+)/i, 'Change file permissions'],
