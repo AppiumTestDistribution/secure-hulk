@@ -82,6 +82,34 @@ export function runCli(): void {
       'Path to Python executable for NeMo Guardrails',
       'python'
     )
+    .option(
+      '--use-huggingface-guardrails',
+      'Use Hugging Face safety models to detect harmful content in entity descriptions',
+      false
+    )
+    .option(
+      '--huggingface-api-token <token>',
+      'Hugging Face API token for safety models (required if using Hugging Face guardrails)'
+    )
+    .option(
+      '--huggingface-model <model>',
+      'Hugging Face safety model to use',
+      'unitary/toxic-bert'
+    )
+    .option(
+      '--huggingface-threshold <threshold>',
+      'Confidence threshold for flagging content (0-1)',
+      '0.5'
+    )
+    .option(
+      '--huggingface-preset <preset>',
+      'Preset configuration: toxicity, hate-speech, multilingual, strict'
+    )
+    .option(
+      '--huggingface-timeout <milliseconds>',
+      'Timeout for Hugging Face API calls in milliseconds',
+      '10000'
+    )
     .argument(
       '[files...]',
       'Path(s) to MCP config file(s). If not provided, well-known paths will be checked'

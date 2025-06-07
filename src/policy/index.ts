@@ -72,7 +72,7 @@ export class PolicyEngine {
       issues: [],
     };
 
-    // Evaluate individual entities
+    
     for (const entity of entities) {
       const entityResult = await this.evaluateEntity(entity);
       if (!entityResult.verified) {
@@ -81,7 +81,7 @@ export class PolicyEngine {
       }
     }
 
-    // Evaluate sequence patterns
+    
     for (const rule of this.rules) {
       if (rule.evaluateSequence) {
         const sequenceResult = await rule.evaluateSequence(entities);

@@ -1,8 +1,3 @@
-/**
- * Types and interfaces for MCP-Scan
- */
-
-// Server configuration types
 export interface ServerConfig {
   type: 'sse' | 'stdio';
   name?: string;
@@ -21,27 +16,21 @@ export interface StdioServerConfig extends ServerConfig {
   env?: Record<string, string>;
 }
 
-// MCP entity types
 export interface Entity {
   name: string;
   description?: string;
 }
 
-export interface Prompt extends Entity {
-  // Prompt-specific properties
-}
+export interface Prompt extends Entity {}
 
 export interface Resource extends Entity {
   uri: string;
-  // Resource-specific properties
 }
 
 export interface Tool extends Entity {
   inputSchema?: any;
-  // Tool-specific properties
 }
 
-// Scan result types
 export interface ScanResult {
   verified: boolean;
   issues: Issue[];
@@ -96,7 +85,6 @@ export interface ScanError {
   exception?: Error;
 }
 
-// Storage types
 export interface ScannedEntity {
   hash: string;
   type: string;
@@ -105,7 +93,6 @@ export interface ScannedEntity {
   description?: string;
 }
 
-// Configuration types
 export interface MCPConfig {
   getServers(): Record<string, SSEServerConfig | StdioServerConfig>;
   setServers(servers: Record<string, SSEServerConfig | StdioServerConfig>): void;
@@ -124,7 +111,6 @@ export interface VSCodeConfigFile extends MCPConfig {
   mcp: VSCodeMCPConfig;
 }
 
-// CLI options
 export interface ScanOptions {
   json?: boolean;
   verbose?: boolean;
@@ -133,13 +119,9 @@ export interface ScanOptions {
   checksPerServer?: number;
   suppressMcpserverIo?: boolean;
   printErrors?: boolean;
-  
-  // OpenAI Moderation API options
   useOpenaiModeration?: boolean;
   openaiApiKey?: string;
   openaiModerationModel?: string;
-
-  // NeMo Guardrails options
   useNemoGuardrails?: boolean;
   nemoGuardrailsConfigPath?: string;
   nemoGuardrailsTimeout?: number;

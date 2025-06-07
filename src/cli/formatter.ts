@@ -23,7 +23,6 @@ export function formatResults(
   for (let i = 0; i < results.length; i++) {
     formatPathResult(results[i], printErrors);
 
-    // Add a newline between results
     if (i < results.length - 1) {
       console.log();
     }
@@ -40,7 +39,6 @@ function formatPathResult(
   printErrors: boolean = false
 ): void {
   if (result.error) {
-    // Print path with error
     const status = formatError(result.error);
     console.log(`● Scanning ${chalk.bold(result.path)} ${chalk.gray(status)}`);
 
@@ -51,27 +49,41 @@ function formatPathResult(
     return;
   }
 
-  // Print path with server count
+  
   const message = `found ${result.servers.length} server${result.servers.length === 1 ? '' : 's'}`;
-  console.log(`${chalk.green('●')} Scanning ${chalk.bold(result.path)} ${chalk.gray(message)}`);
+  console.log(
+    `${chalk.green('●')} Scanning ${chalk.bold(result.path)} ${chalk.gray(message)}`
+  );
   console.log();
 
-  // Print summary of checks with icons and colors
+  
   console.log(chalk.bold.underline('Security Scan Summary:'));
-  console.log(`  ${chalk.magenta('🔒')} ${chalk.magenta('Checking for prompt injection vulnerabilities')}`);
-  console.log(`  ${chalk.yellow('⚠️')} ${chalk.yellow('Checking for tool poisoning attempts')}`);
-  console.log(`  ${chalk.red('🌐')} ${chalk.red('Checking for cross-origin escalation risks')}`);
-  console.log(`  ${chalk.blue('🛡️')} ${chalk.blue('Checking for harmful content using OpenAI Moderation API')}`);
-  console.log(`  ${chalk.green('🔰')} ${chalk.green('Checking for content violations using NVIDIA NeMo Guardrails')}`);
-  console.log(`  ${chalk.cyan('🔍')} ${chalk.cyan('Verifying entity descriptions and schemas')}`);
+  console.log(
+    `  ${chalk.magenta('🔒')} ${chalk.magenta('Checking for prompt injection vulnerabilities')}`
+  );
+  console.log(
+    `  ${chalk.yellow('⚠️')} ${chalk.yellow('Checking for tool poisoning attempts')}`
+  );
+  console.log(
+    `  ${chalk.red('🌐')} ${chalk.red('Checking for cross-origin escalation risks')}`
+  );
+  console.log(
+    `  ${chalk.blue('🛡️')} ${chalk.blue('Checking for harmful content using OpenAI Moderation API')}`
+  );
+  console.log(
+    `  ${chalk.green('🔰')} ${chalk.green('Checking for content violations using NVIDIA NeMo Guardrails')}`
+  );
+  console.log(
+    `  ${chalk.cyan('🔍')} ${chalk.cyan('Verifying entity descriptions and schemas')}`
+  );
   console.log();
 
-  // Print servers
+  
   for (const server of result.servers) {
     formatServerResult(server, printErrors);
   }
 
-  // Print cross-reference result
+  
   if (result.crossRefResult?.found) {
     console.log();
     console.log(
@@ -127,7 +139,7 @@ function formatServerResult(
       `Server: ${server.name || 'unnamed'} (${(server.server as any).type || (server.server as any).transportType})`
     )
   );
-  
+
   // Print entity counts with icons
   console.log(
     `  ${chalk.cyan('📊')} Retrieved: ${chalk.cyan.bold(`${prompts} prompts`)}, ${chalk.cyan.bold(`${resources} resources`)}, ${chalk.cyan.bold(`${tools} tools`)}`
@@ -175,7 +187,9 @@ function formatServerResult(
   const issues = server.result?.filter((r) => !r.verified);
   if (issues && issues.length > 0) {
     console.log();
-    console.log(chalk.red.bold(`  ⚠️ SECURITY ISSUES FOUND (${issues.length}):`));
+    console.log(
+      chalk.red.bold(`  ⚠️ SECURITY ISSUES FOUND (${issues.length}):`)
+    );
     console.log(chalk.red(`  ┏${'━'.repeat(60)}┓`));
 
     // Print entities with issues
@@ -339,142 +353,171 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
   if (!('inputSchema' in entity) && !('uri' in entity)) type = 'prompt';
 
   // Print entity name and type with an icon
-  console.log(`    ${chalk.bold.white('┌─')} ${chalk.bold.red(entity.name)} ${chalk.cyan(`[${type}]`)}`);
+  console.log(
+    `    ${chalk.bold.white('┌─')} ${chalk.bold.red(entity.name)} ${chalk.cyan(`[${type}]`)}`
+  );
 
   // Group messages by issue type
   const messages = result.messages || [];
   const groupedMessages = new Map();
-  
+
   for (const message of messages) {
     let issueType = '';
     let issueCategory = '';
     let icon = '';
     let color = chalk.white;
     let detailedExplanation = '';
-    
+
     // Determine the issue type and category
     if (message.includes('Prompt Injection detected:')) {
       issueType = 'PROMPT INJECTION';
       icon = '🔒';
       color = chalk.magenta;
-      
+
       const parts = message.split(': ');
       if (parts.length > 1) {
         const categoryParts = parts[1].split(' - ');
         issueCategory = categoryParts[0];
       }
-      
+
       // Add detailed explanation based on the category
       if (issueCategory.includes('Hidden instructions')) {
-        detailedExplanation = 'Hidden instructions in XML-like tags can manipulate the AI to perform unauthorized actions.';
+        detailedExplanation =
+          'Hidden instructions in XML-like tags can manipulate the AI to perform unauthorized actions.';
       } else if (issueCategory.includes('Hidden secret')) {
-        detailedExplanation = 'Secret instructions attempt to access sensitive files or perform privileged operations.';
+        detailedExplanation =
+          'Secret instructions attempt to access sensitive files or perform privileged operations.';
       } else if (issueCategory.includes('Hidden system')) {
-        detailedExplanation = 'System-level instructions attempt to modify AI behavior or bypass security controls.';
+        detailedExplanation =
+          'System-level instructions attempt to modify AI behavior or bypass security controls.';
       } else if (issueCategory.includes('Instruction override')) {
-        detailedExplanation = 'Attempts to override or ignore previous instructions to bypass security controls.';
+        detailedExplanation =
+          'Attempts to override or ignore previous instructions to bypass security controls.';
       } else if (issueCategory.includes('Jailbreak')) {
-        detailedExplanation = 'Uses known jailbreak techniques to bypass AI safety mechanisms.';
+        detailedExplanation =
+          'Uses known jailbreak techniques to bypass AI safety mechanisms.';
       }
     } else if (message.includes('Tool Poisoning detected:')) {
       issueType = 'TOOL POISONING';
       icon = '⚠️';
       color = chalk.yellow;
-      
+
       const parts = message.split(': ');
       if (parts.length > 1) {
         const categoryParts = parts[1].split(' - ');
         issueCategory = categoryParts[0];
       }
-      
+
       // Add detailed explanation based on the category
       if (issueCategory.includes('Tool shadowing')) {
-        detailedExplanation = 'Tool shadowing attempts to modify the behavior of other tools, potentially leading to unauthorized actions.';
+        detailedExplanation =
+          'Tool shadowing attempts to modify the behavior of other tools, potentially leading to unauthorized actions.';
       } else if (issueCategory.includes('Command execution')) {
-        detailedExplanation = 'Attempts to execute arbitrary system commands that could compromise security.';
+        detailedExplanation =
+          'Attempts to execute arbitrary system commands that could compromise security.';
       } else if (issueCategory.includes('Code execution')) {
-        detailedExplanation = 'Attempts to execute arbitrary code that could lead to system compromise.';
+        detailedExplanation =
+          'Attempts to execute arbitrary code that could lead to system compromise.';
       } else if (issueCategory.includes('network request')) {
-        detailedExplanation = 'Attempts to make unauthorized network requests to external servers.';
+        detailedExplanation =
+          'Attempts to make unauthorized network requests to external servers.';
       } else if (issueCategory.includes('DOM manipulation')) {
-        detailedExplanation = 'Attempts to manipulate the DOM which could lead to XSS attacks.';
+        detailedExplanation =
+          'Attempts to manipulate the DOM which could lead to XSS attacks.';
       } else if (issueCategory.includes('File system')) {
-        detailedExplanation = 'Attempts to access the file system which could lead to data theft or corruption.';
+        detailedExplanation =
+          'Attempts to access the file system which could lead to data theft or corruption.';
       } else if (issueCategory.includes('Environment')) {
-        detailedExplanation = 'Attempts to access environment variables which could expose sensitive information.';
+        detailedExplanation =
+          'Attempts to access environment variables which could expose sensitive information.';
       }
     } else if (message.includes('Cross-Origin Escalation detected:')) {
       issueType = 'CROSS-ORIGIN ESCALATION';
       icon = '🌐';
       color = chalk.red;
-      
+
       const parts = message.split(': ');
       if (parts.length > 1) {
         const categoryParts = parts[1].split(' - ');
         issueCategory = categoryParts[0];
       }
-      
+
       // Add detailed explanation based on the category
       if (issueCategory.includes('Reference to external')) {
-        detailedExplanation = 'References to external services could lead to unauthorized data sharing.';
+        detailedExplanation =
+          'References to external services could lead to unauthorized data sharing.';
       } else if (issueCategory.includes('Unauthorized access')) {
-        detailedExplanation = 'Attempts to access unauthorized services or resources.';
+        detailedExplanation =
+          'Attempts to access unauthorized services or resources.';
       } else if (issueCategory.includes('Data routing')) {
-        detailedExplanation = 'Attempts to route data through external services which could lead to data exfiltration.';
+        detailedExplanation =
+          'Attempts to route data through external services which could lead to data exfiltration.';
       } else if (issueCategory.includes('cross-boundary')) {
-        detailedExplanation = 'Explicit cross-boundary references could lead to privilege escalation.';
+        detailedExplanation =
+          'Explicit cross-boundary references could lead to privilege escalation.';
       } else if (issueCategory.includes('Tool chaining')) {
-        detailedExplanation = 'Tool chaining attempts could bypass security controls by combining tools.';
+        detailedExplanation =
+          'Tool chaining attempts could bypass security controls by combining tools.';
       } else if (issueCategory.includes('weather service')) {
-        detailedExplanation = 'References to weather services could lead to unauthorized data access or API key exposure.';
+        detailedExplanation =
+          'References to weather services could lead to unauthorized data access or API key exposure.';
       } else if (issueCategory.includes('calendar service')) {
-        detailedExplanation = 'References to calendar services could lead to unauthorized access to user schedule data.';
+        detailedExplanation =
+          'References to calendar services could lead to unauthorized access to user schedule data.';
       } else if (issueCategory.includes('email service')) {
-        detailedExplanation = 'References to email services could lead to unauthorized message sending or data exfiltration.';
+        detailedExplanation =
+          'References to email services could lead to unauthorized message sending or data exfiltration.';
       } else if (issueCategory.includes('search service')) {
-        detailedExplanation = 'References to search services could lead to unauthorized data collection or tracking.';
+        detailedExplanation =
+          'References to search services could lead to unauthorized data collection or tracking.';
       }
     } else if (message.includes('Data Exfiltration detected:')) {
       issueType = 'DATA EXFILTRATION';
       icon = '💼';
       color = chalk.cyan;
-      
+
       const parts = message.split(': ');
       if (parts.length > 1) {
         const categoryParts = parts[1].split(' - ');
         issueCategory = categoryParts[0];
       }
-      
+
       // Add detailed explanation based on the category
       if (issueCategory.includes('Suspicious parameter')) {
-        detailedExplanation = 'Suspicious parameters could be used to exfiltrate sensitive data to external systems.';
+        detailedExplanation =
+          'Suspicious parameters could be used to exfiltrate sensitive data to external systems.';
       } else if (issueCategory.includes('passthrough')) {
-        detailedExplanation = 'Passthrough parameters allow arbitrary data to be sent, which could lead to data exfiltration.';
+        detailedExplanation =
+          'Passthrough parameters allow arbitrary data to be sent, which could lead to data exfiltration.';
       } else {
-        detailedExplanation = 'Data exfiltration attempts could lead to sensitive information being sent to unauthorized recipients.';
+        detailedExplanation =
+          'Data exfiltration attempts could lead to sensitive information being sent to unauthorized recipients.';
       }
-    } else if (message.includes('Harmful content detected by OpenAI Moderation API:')) {
+    } else if (
+      message.includes('Harmful content detected by OpenAI Moderation API:')
+    ) {
       issueType = 'HARMFUL CONTENT';
       icon = '🛡️';
       color = chalk.blue;
-      
+
       const parts = message.split(': ');
       if (parts.length > 1) {
         const categoryParts = parts[1].split(' - ');
         issueCategory = categoryParts[0];
       }
-      
-      detailedExplanation = 'Content flagged by OpenAI Moderation API for potentially harmful, unsafe, or unethical content.';
+
+      detailedExplanation =
+        'Content flagged by OpenAI Moderation API for potentially harmful, unsafe, or unethical content.';
     } else if (message.includes('Content flagged by NeMo Guardrails:')) {
       issueType = 'NEMO GUARDRAILS VIOLATION';
       icon = '🔰';
       color = chalk.green;
-      
+
       const parts = message.split(': ');
       if (parts.length > 1) {
         const categoryParts = parts[1].split(' - ');
         issueCategory = categoryParts[0];
-        
+
         // Extract context information if available
         if (issueCategory.includes('(Context:')) {
           const contextParts = issueCategory.split('(Context:');
@@ -483,22 +526,28 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
           issueCategory += ` (${contextInfo})`;
         }
       }
-      
-      detailedExplanation = 'Content flagged by NVIDIA NeMo Guardrails for violating configured guardrails and content policies.';
-    } else if (message.includes('NeMo Guardrails is enabled but no configuration path is provided')) {
+
+      detailedExplanation =
+        'Content flagged by NVIDIA NeMo Guardrails for violating configured guardrails and content policies.';
+    } else if (
+      message.includes(
+        'NeMo Guardrails is enabled but no configuration path is provided'
+      )
+    ) {
       issueType = 'NEMO GUARDRAILS WARNING';
       icon = '⚠️';
       color = chalk.yellow;
       issueCategory = 'Configuration Missing';
-      
-      detailedExplanation = 'NeMo Guardrails is enabled but no configuration path is provided. Use --nemo-guardrails-config-path to specify the path.';
+
+      detailedExplanation =
+        'NeMo Guardrails is enabled but no configuration path is provided. Use --nemo-guardrails-config-path to specify the path.';
     } else {
       issueType = 'ISSUE';
       icon = 'ℹ️';
       color = chalk.gray;
       issueCategory = message;
     }
-    
+
     // Extract the found content
     let foundContent = '';
     if (message.includes(' - Found "')) {
@@ -516,7 +565,7 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
         }
       }
     }
-    
+
     // Group by issue type
     if (!groupedMessages.has(issueType)) {
       groupedMessages.set(issueType, {
@@ -524,16 +573,16 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
         color,
         category: issueCategory,
         explanation: detailedExplanation,
-        foundItems: []
+        foundItems: [],
       });
     }
-    
+
     // Add found content to the group
     if (foundContent) {
       groupedMessages.get(issueType).foundItems.push(foundContent);
     }
   }
-  
+
   // Print grouped messages
   let isFirst = true;
   for (const [issueType, data] of groupedMessages.entries()) {
@@ -541,25 +590,35 @@ function formatEntityWithIssue(entity: Entity, result: EntityScanResult): void {
       console.log(`    ${chalk.bold.white('│')}`);
     }
     isFirst = false;
-    
+
     // Print the issue type and category
-    console.log(`    ${chalk.bold.white('│')}  ${data.color.bold(`${data.icon} ${issueType}:`)} ${data.color(data.category)}`);
-    
+    console.log(
+      `    ${chalk.bold.white('│')}  ${data.color.bold(`${data.icon} ${issueType}:`)} ${data.color(data.category)}`
+    );
+
     // Print the found items as bullet points
     if (data.foundItems.length > 0) {
-      console.log(`    ${chalk.bold.white('│')}  ${chalk.bold.white('↳')} ${chalk.italic.white('Found:')}`);
+      console.log(
+        `    ${chalk.bold.white('│')}  ${chalk.bold.white('↳')} ${chalk.italic.white('Found:')}`
+      );
       for (const item of data.foundItems) {
-        console.log(`    ${chalk.bold.white('│')}     ${chalk.bold.white('•')} ${chalk.italic(item)}`);
+        console.log(
+          `    ${chalk.bold.white('│')}     ${chalk.bold.white('•')} ${chalk.italic(item)}`
+        );
       }
     }
-    
+
     // Print detailed explanation if available
     if (data.explanation) {
-      console.log(`    ${chalk.bold.white('│')}  ${chalk.bold.white('↳')} ${chalk.italic.white('Impact:')} ${chalk.italic.gray(data.explanation)}`);
+      console.log(
+        `    ${chalk.bold.white('│')}  ${chalk.bold.white('↳')} ${chalk.italic.white('Impact:')} ${chalk.italic.gray(data.explanation)}`
+      );
     }
   }
-  
+
   // Close the box
-  console.log(`    ${chalk.bold.white('└───────────────────────────────────────')}`);
+  console.log(
+    `    ${chalk.bold.white('└───────────────────────────────────────')}`
+  );
   console.log();
 }

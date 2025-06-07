@@ -19,7 +19,7 @@ import { StorageManager } from '../storage';
 import { checkCrossReferences } from './crossReference';
 import { ToolPinningManager } from './toolPinning';
 
-// Well-known MCP configuration paths by platform
+
 const WELL_KNOWN_MCP_PATHS: Record<string, string[]> = {
   linux: [
     '~/.codeium/windsurf/mcp_config.json', // windsurf
@@ -74,7 +74,7 @@ export async function scan(
   files: string[] = [],
   options: ScanOptions = {}
 ): Promise<ScanPathResult[]> {
-  // Convert kebab-case CLI options to camelCase
+  
   if (
     options.useOpenaiModeration === undefined &&
     (options as any)['use-openai-moderation']
@@ -96,20 +96,63 @@ export async function scan(
     options.openaiModerationModel = (options as any)['openai-moderation-model'];
   }
 
-  // Use provided files or well-known paths
+  
+  if (
+    options.useHuggingFaceGuardrails === undefined &&
+    (options as any)['use-huggingface-guardrails']
+  ) {
+    options.useHuggingFaceGuardrails = (options as any)['use-huggingface-guardrails'];
+  }
+
+  if (
+    options.huggingFaceApiToken === undefined &&
+    (options as any)['huggingface-api-token']
+  ) {
+    options.huggingFaceApiToken = (options as any)['huggingface-api-token'];
+  }
+
+  if (
+    options.huggingFaceModel === undefined &&
+    (options as any)['huggingface-model']
+  ) {
+    options.huggingFaceModel = (options as any)['huggingface-model'];
+  }
+
+  if (
+    options.huggingFaceThreshold === undefined &&
+    (options as any)['huggingface-threshold']
+  ) {
+    options.huggingFaceThreshold = parseFloat((options as any)['huggingface-threshold']);
+  }
+
+  if (
+    options.huggingFacePreset === undefined &&
+    (options as any)['huggingface-preset']
+  ) {
+    options.huggingFacePreset = (options as any)['huggingface-preset'];
+  }
+
+  if (
+    options.huggingFaceTimeout === undefined &&
+    (options as any)['huggingface-timeout']
+  ) {
+    options.huggingFaceTimeout = parseInt((options as any)['huggingface-timeout']);
+  }
+
+  
   const pathsToScan = files.length > 0 ? files : getWellKnownPaths();
   console.log(`Found ${pathsToScan.length} configuration paths to scan`);
 
-  // Initialize storage manager
+  
   console.log('Initializing storage manager...');
   const storageManager = new StorageManager(options.storageFile);
   await storageManager.initialize();
 
-  // Initialize tool pinning manager
+  
   console.log('Initializing tool pinning manager...');
   const toolPinningManager = new ToolPinningManager(storageManager);
 
-  // Scan each path
+  
   const results: ScanPathResult[] = [];
 
   for (let i = 0; i < pathsToScan.length; i++) {
@@ -151,12 +194,12 @@ async function scanPath(
   };
 
   try {
-    // Parse the configuration file
+    
     console.log(`Reading and parsing configuration file: ${path}`);
     const config = await scanMcpConfigFile(path);
     const servers = config.getServers();
 
-    // Create server scan results
+    
     const serverCount = Object.keys(servers).length;
     console.log(`Found ${serverCount} MCP servers in configuration`);
 
@@ -169,7 +212,7 @@ async function scanPath(
       entities: [],
     }));
 
-    // Scan each server
+    
     for (let i = 0; i < result.servers.length; i++) {
       const serverName = result.servers[i].name || `unnamed-server-${i}`;
       console.log(
@@ -184,7 +227,7 @@ async function scanPath(
       );
     }
 
-    // Check for cross-references
+    
     result.crossRefResult = checkCrossReferences(result.servers);
   } catch (error) {
     result.error = {
@@ -317,17 +360,17 @@ export async function inspect(
   files: string[] = [],
   options: ScanOptions = {}
 ): Promise<ScanPathResult[]> {
-  // Use provided files or well-known paths
+  
   const pathsToScan = files.length > 0 ? files : getWellKnownPaths();
 
-  // Initialize storage manager
+  
   const storageManager = new StorageManager(options.storageFile);
   await storageManager.initialize();
 
-  // Initialize tool pinning manager
+  
   const toolPinningManager = new ToolPinningManager(storageManager);
 
-  // Scan each path
+  
   const results: ScanPathResult[] = [];
 
   for (const filePath of pathsToScan) {
@@ -364,11 +407,11 @@ async function inspectPath(
   };
 
   try {
-    // Parse the configuration file
+    
     const config = await scanMcpConfigFile(path);
     const servers = config.getServers();
 
-    // Create server scan results
+    
     result.servers = Object.entries(servers).map(([name, server]) => ({
       name,
       server: server as SSEServerConfig | StdioServerConfig,
@@ -411,7 +454,7 @@ export async function whitelist(
   hash?: string,
   options: WhitelistOptions = {}
 ): Promise<void> {
-  // Initialize storage manager
+  
   const storageManager = new StorageManager(options.storageFile);
   await storageManager.initialize();
 

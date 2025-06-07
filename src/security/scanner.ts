@@ -9,6 +9,7 @@ import {
   createToolPoisoningRules,
   createCrossOriginRules,
   createFlowAnalysisRules,
+  createToxicFlowAnalysisRules,
   createDataExfiltrationRules,
   createContextManipulationRules,
   createPrivilegeEscalationRules,
@@ -19,6 +20,8 @@ import { checkForToolPoisoning } from './checks/toolPoisoning';
 import { checkForCrossOriginEscalation } from './checks/crossOriginEscalation';
 import { checkForDataExfiltration } from './checks/dataExfiltration';
 import { checkWithNemoGuardrails } from './checks/nemoGuardrails';
+import { checkForToxicAgentFlow } from './checks/toxicAgentFlow';
+import { checkWithHuggingFaceGuardrails } from './checks/huggingFaceGuardrails';
 
 /**
  * Create a policy engine with all security rules
@@ -30,6 +33,7 @@ export function createPolicyEngine(): PolicyEngine {
     ...createToolPoisoningRules(),
     ...createCrossOriginRules(),
     ...createFlowAnalysisRules(),
+    ...createToxicFlowAnalysisRules(),
     ...createDataExfiltrationRules(),
     ...createContextManipulationRules(),
     ...createPrivilegeEscalationRules(
@@ -54,14 +58,16 @@ export async function scanEntity(
     issues: [],
   };
 
-  // Run security checks
+  
   await Promise.all([
     checkForPromptInjection(entity, results),
     checkForHarmfulContent(entity, results, options),
     checkForToolPoisoning(entity, results),
     checkForCrossOriginEscalation(entity, results),
     checkForDataExfiltration(entity, results),
+    checkForToxicAgentFlow(entity, results),
     checkWithNemoGuardrails(entity, results, options),
+    checkWithHuggingFaceGuardrails(entity, results, options),
   ]);
 
   return results;
@@ -78,7 +84,7 @@ export async function verifyServer(
   entities: Entity[],
   options?: ScanOptions
 ): Promise<ScanResult[]> {
-  // Scan each entity
+  
   const scanPromises = entities.map((entity) => scanEntity(entity, options));
   return Promise.all(scanPromises);
 }

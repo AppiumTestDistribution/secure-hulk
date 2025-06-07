@@ -2,5 +2,4 @@
 
 import { runCli } from './cli';
 
-// Run the CLI
 runCli();
