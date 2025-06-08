@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Security Scan Report - scan</title>
+  <title>Security Scan Report - mcp-vulernable</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -746,11 +746,14 @@
   <header>
     <div class="container">
       <div class="header-content">
-        <div>
-          <h1>Security Scan Report</h1>
-          <p>Server: scan (stdio)</p>
-          <div class="scan-progress">
-            <div class="scan-progress-bar"></div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <img src="https://raw.githubusercontent.com/AppiumTestDistribution/secure-hulk/main/src/assets/SecureHulkLogo.png" alt="Secure-Hulk Logo" style="width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: contain; background: white; padding: 4px;" />
+          <div>
+            <h1>Security Scan Report</h1>
+            <p>Server: mcp-vulernable (stdio)</p>
+            <div class="scan-progress">
+              <div class="scan-progress-bar"></div>
+            </div>
           </div>
         </div>
         <button class="theme-toggle tooltip" data-tooltip="Toggle Dark Mode">
@@ -908,6 +911,17 @@
       <div class="entity-body">
         
           <div class="issue-group">
+            <div class="issue-type prompt-injection collapsible">
+              <span class="issue-icon">🔒</span>
+              <span>PROMPT INJECTION: Hidden hidden in XML-like tags</span>
+            </div>
+            <div class="issue-details issue-content">
+              
+              
+            </div>
+          </div>
+        
+          <div class="issue-group">
             <div class="issue-type tool-poisoning collapsible">
               <span class="issue-icon">⚠️</span>
               <span>TOOL POISONING: Tool shadowing/behavior modification</span>
@@ -1002,7 +1016,7 @@
           <div class="issue-group">
             <div class="issue-type prompt-injection collapsible">
               <span class="issue-icon">🔒</span>
-              <span>PROMPT INJECTION: Hidden  in XML-like tags</span>
+              <span>PROMPT INJECTION: Harmful content request</span>
             </div>
             <div class="issue-details issue-content">
               
@@ -1034,11 +1048,11 @@
           <div class="issue-group">
             <div class="issue-type prompt-injection collapsible">
               <span class="issue-icon">🔒</span>
-              <span>PROMPT INJECTION: Jailbreak technique attempt</span>
+              <span>PROMPT INJECTION: Hidden system in XML-like tags</span>
             </div>
             <div class="issue-details issue-content">
               
-              <p class="impact"><i class="fas fa-exclamation-circle"></i> Impact: Uses known jailbreak techniques to bypass AI safety mechanisms.</p>
+              <p class="impact"><i class="fas fa-exclamation-circle"></i> Impact: System-level instructions attempt to modify AI behavior or bypass security controls.</p>
             </div>
           </div>
         
@@ -1058,8 +1072,11 @@
     
   
   <div class="timestamp">
-    <p><i class="fas fa-calendar-alt"></i> Report generated on 5/13/2025, 1:24:28 AM</p>
-    <p><i class="fas fa-shield-alt"></i> Secure-Hulk Security Scanner</p>
+    <p><i class="fas fa-calendar-alt"></i> Report generated on 6/8/2025, 12:59:15 PM</p>
+    <p style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <img src="https://raw.githubusercontent.com/AppiumTestDistribution/secure-hulk/main/src/assets/SecureHulkLogo.png" alt="Secure-Hulk Logo" style="width: 24px; height: 24px; border-radius: 6px; object-fit: contain; background: white; padding: 2px;" />
+      <span><i class="fas fa-shield-alt"></i> Powered by Secure-Hulk Security Scanner</span>
+    </p>
   </div>
   
   <div class="fab tooltip" data-tooltip="Back to Top">

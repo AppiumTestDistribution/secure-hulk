@@ -798,11 +798,14 @@ export function generateHtmlReport(
   <header>
     <div class="container">
       <div class="header-content">
-        <div>
-          <h1>Security Scan Report</h1>
-          <p>Server: ${serverName} (${serverType})</p>
-          <div class="scan-progress">
-            <div class="scan-progress-bar"></div>
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <img src="https://raw.githubusercontent.com/AppiumTestDistribution/secure-hulk/main/src/assets/SecureHulkLogo.png" alt="Secure-Hulk Logo" style="width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); object-fit: contain; background: white; padding: 4px;" />
+          <div>
+            <h1>Security Scan Report</h1>
+            <p>Server: ${serverName} (${serverType})</p>
+            <div class="scan-progress">
+              <div class="scan-progress-bar"></div>
+            </div>
           </div>
         </div>
         <button class="theme-toggle tooltip" data-tooltip="Toggle Dark Mode">
@@ -1067,7 +1070,10 @@ export function generateHtmlReport(
   
   <div class="timestamp">
     <p><i class="fas fa-calendar-alt"></i> Report generated on ${new Date().toLocaleString()}</p>
-    <p><i class="fas fa-shield-alt"></i> Secure-Hulk Security Scanner</p>
+    <p style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+      <img src="https://raw.githubusercontent.com/AppiumTestDistribution/secure-hulk/main/src/assets/SecureHulkLogo.png" alt="Secure-Hulk Logo" style="width: 24px; height: 24px; border-radius: 6px; object-fit: contain; background: white; padding: 2px;" />
+      <span><i class="fas fa-shield-alt"></i> Powered by Secure-Hulk Security Scanner</span>
+    </p>
   </div>
   
   <div class="fab tooltip" data-tooltip="Back to Top">

@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="src/assets/SecureHulkLogo.png" alt="Secure-Hulk Logo" width="200"/>
+  <img src="src/assets/SecureHulkLogo.png" alt="Secure-Hulk Logo" width="400"/>
   
   # Secure-Hulk
   
