@@ -37,19 +37,19 @@ npm run build
 
 ```bash
 # Scan well-known MCP configuration paths
-npm start
+npm i secure-hulk
 
 # Scan specific configuration files
-npm start scan /path/to/config.json
+secure-hulk scan /path/to/config.json
 
 # Generate HTML report
-npm start scan --html report.html /path/to/config.json
+secure-hulk scan --html report.html /path/to/config.json
 
 # Enable verbose output
-npm start scan -v /path/to/config.json
+secure-hulk scan -v /path/to/config.json
 
 # Output results in JSON format
-npm start scan -j /path/to/config.json
+secure-hulk scan -j /path/to/config.json
 ```
 
 ### Using OpenAI Moderation API for Harmful Content Detection
@@ -59,7 +59,7 @@ Secure-Hulk now supports using OpenAI's Moderation API to detect harmful content
 To use the OpenAI Moderation API:
 
 ```bash
-npm start scan --use-openai-moderation --openai-api-key YOUR_API_KEY /path/to/config.json
+secure-hulk scan --use-openai-moderation --openai-api-key YOUR_API_KEY /path/to/config.json
 ```
 
 Options:
@@ -94,7 +94,7 @@ Secure-Hulk now supports Hugging Face safety models for advanced AI-powered cont
 To use Hugging Face safety models:
 
 ```bash
-npm start scan --use-huggingface-guardrails --huggingface-api-token YOUR_HF_TOKEN /path/to/config.json
+secure-hulk scan --use-huggingface-guardrails --huggingface-api-token YOUR_HF_TOKEN /path/to/config.json
 ```
 
 Options:
@@ -120,7 +120,7 @@ Preset configurations:
 Example with multiple guardrails:
 
 ```bash
-npm start scan \
+secure-hulk scan \
   --use-openai-moderation --openai-api-key YOUR_OPENAI_KEY \
   --use-huggingface-guardrails --huggingface-preset toxicity --huggingface-api-token YOUR_HF_TOKEN \
   --use-nemo-guardrails --nemo-guardrails-config-path ./guardrails-config \
@@ -140,20 +140,20 @@ If the Hugging Face API check fails for any reason, Secure-Hulk will log the err
 ### Inspecting MCP Configurations
 
 ```bash
-npm start inspect /path/to/config.json
+secure-hulk inspect /path/to/config.json
 ```
 
 ### Managing the Whitelist
 
 ```bash
 # Add an entity to the whitelist
-npm start whitelist tool "Calculator" abc123
+secure-hulk whitelist tool "Calculator" abc123
 
 # Print the whitelist
-npm start whitelist
+secure-hulk whitelist
 
 # Reset the whitelist
-npm start whitelist --reset
+secure-hulk whitelist --reset
 ```
 
 ## Configuration
