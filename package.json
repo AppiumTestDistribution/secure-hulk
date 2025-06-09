@@ -1,6 +1,6 @@
 {
   "name": "secure-hulk",
-  "version": "1.0.0-beta2n",
+  "version": "1.0.0-beta3",
   "description": "Security scanner for Model Context Protocol servers and tools",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
